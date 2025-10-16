@@ -146,10 +146,10 @@ app.use((err, req, res, next) => {
 // INICIAR SERVIDOR
 // ============================================
 app.listen(PORT, () => {
-  console.log(`🚀 API Gateway corriendo en http://localhost:${PORT}`);
-  console.log(`📍 Environment: ${process.env.NODE_ENV}`);
-  console.log(`🔗 Auth Service: ${process.env.AUTH_SERVICE_URL}`);
-  console.log(`🔗 Menu Service: ${process.env.MENU_SERVICE_URL}`);
-  console.log(`🔗 Order Service: ${process.env.ORDER_SERVICE_URL}`);
-  console.log(`🔗 Payment Service: ${process.env.PAYMENT_SERVICE_URL}`);
+  console.log(`API Gateway corriendo en http://localhost:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`Auth Service: ${process.env.AUTH_SERVICE_URL}`);
+  console.log(`Menu Service: ${process.env.MENU_SERVICE_URL}`);
+  console.log(`Order Service: ${process.env.ORDER_SERVICE_URL}`);
+  console.log(`Payment Service: ${process.env.PAYMENT_SERVICE_URL}`);
 });
