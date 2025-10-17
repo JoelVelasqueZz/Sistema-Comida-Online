@@ -31,10 +31,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (userData) => {
-    const data = await authService.register(userData);
-    setUser(data.user);
-    return data;
-  };
+  const data = await authService.register(userData);
+  setUser(data.user);
+  
+  if (data.token) {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+  }
+  
+  return data;
+};
 
   const logout = () => {
     authService.logout();

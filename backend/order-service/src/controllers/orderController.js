@@ -9,123 +9,142 @@ const createOrder = async (req, res) => {
   
   try {
     const userId = req.user.userId;
-    const { 
-      address_id, 
-      items, // [{ product_id, quantity, extras: [extra_id] }]
-      payment_method,
-      special_instructions 
-    } = req.body;
+    const { items, payment_method, special_instructions, delivery_address } = req.body;
+    console.log('Creando orden para usuario:', userId);
+    console.log('   Items:', items);
+    console.log('   Dirección:', delivery_address);
 
     // Validaciones
-    if (!address_id || !items || items.length === 0 || !payment_method) {
-      return res.status(400).json({ 
-        error: 'Dirección, items y método de pago son obligatorios' 
-      });
+    if (!items || items.length === 0) {
+      return res.status(400).json({ error: 'Debe incluir al menos un producto' });
+    }
+
+    if (!delivery_address || !delivery_address.street || !delivery_address.city) {
+      return res.status(400).json({ error: 'Debe proporcionar una dirección de entrega válida' });
     }
 
     await client.query('BEGIN');
 
-    // 1. Obtener precios de productos desde Menu Service
+    // Calcular subtotal y validar productos
     let subtotal = 0;
-    const orderItems = [];
+    const validatedItems = [];
 
     for (const item of items) {
-      // Consultar producto
-      const productResult = await pool.query(
-        'SELECT id, name, price, is_available FROM products WHERE id = $1',
+      // Obtener información del producto
+      const productResult = await client.query(
+        'SELECT * FROM products WHERE id = $1 AND is_available = true',
         [item.product_id]
       );
 
       if (productResult.rows.length === 0) {
-        throw new Error(`Producto ${item.product_id} no encontrado`);
+        await client.query('ROLLBACK');
+        return res.status(400).json({ 
+          error: `Producto ${item.product_id} no disponible` 
+        });
       }
 
       const product = productResult.rows[0];
+      let itemPrice = parseFloat(product.price);
 
-      if (!product.is_available) {
-        throw new Error(`Producto ${product.name} no está disponible`);
-      }
-
-      // Calcular subtotal del item
-      let itemSubtotal = product.price * item.quantity;
-
-      // Calcular extras
+      // Calcular precio de extras
+      let extrasPrice = 0;
       const itemExtras = [];
-      if (item.extras && item.extras.length > 0) {
-        for (const extraId of item.extras) {
-          const extraResult = await pool.query(
-            'SELECT id, name, price FROM product_extras WHERE id = $1 AND is_available = true',
-            [extraId]
-          );
 
-          if (extraResult.rows.length > 0) {
-            const extra = extraResult.rows[0];
-            itemExtras.push(extra);
-            itemSubtotal += extra.price * item.quantity;
-          }
+      if (item.extras && item.extras.length > 0) {
+        const extrasResult = await client.query(
+          'SELECT * FROM product_extras WHERE id = ANY($1) AND product_id = $2',
+          [item.extras, item.product_id]
+        );
+
+        for (const extra of extrasResult.rows) {
+          extrasPrice += parseFloat(extra.price);
+          itemExtras.push(extra);
         }
       }
 
-      subtotal += itemSubtotal;
+      const itemTotal = (itemPrice + extrasPrice) * item.quantity;
+      subtotal += itemTotal;
 
-      orderItems.push({
-        product,
+      validatedItems.push({
+        product_id: item.product_id,
         quantity: item.quantity,
-        unit_price: product.price,
-        subtotal: itemSubtotal,
+        unit_price: itemPrice,
         extras: itemExtras,
-        special_instructions: item.special_instructions
+        item_total: itemTotal
       });
     }
 
-    // 2. Calcular totales
-    const delivery_fee = 2.50; // Puedes hacer esto dinámico
-    const tax = subtotal * 0.12; // 12% IVA
-    const total = subtotal + delivery_fee + tax;
+    // Calcular totales
+    const deliveryFee = 2.50;
+    const tax = subtotal * 0.12;
+    const total = subtotal + deliveryFee + tax;
 
-    // 3. Crear la orden
+    console.log('Totales calculados:');
+    console.log('   Subtotal:', subtotal);
+    console.log('   Delivery:', deliveryFee);
+    console.log('   Tax:', tax);
+    console.log('   Total:', total);
+
+    // Crear la orden (sin address_id)
     const orderResult = await client.query(
       `INSERT INTO orders 
-       (user_id, address_id, status, subtotal, delivery_fee, tax, total, payment_method, special_instructions)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       (user_id, status, subtotal, delivery_fee, tax, total, payment_method, special_instructions, 
+        street, city, postal_code, reference)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
-      [userId, address_id, 'pending', subtotal, delivery_fee, tax, total, payment_method, special_instructions]
+      [
+        userId, 
+        'pending', 
+        subtotal, 
+        deliveryFee, 
+        tax, 
+        total, 
+        payment_method || 'cash',
+        special_instructions || null,
+        delivery_address.street,
+        delivery_address.city,
+        delivery_address.postal_code || '',
+        delivery_address.reference || ''
+      ]
     );
 
     const order = orderResult.rows[0];
+    console.log('Orden creada con ID:', order.id);
 
-    // 4. Insertar items de la orden
-    for (const item of orderItems) {
+    // Insertar items de la orden
+    for (const item of validatedItems) {
+    // Obtener el nombre del producto
+    const productInfo = await client.query(
+      'SELECT name FROM products WHERE id = $1',
+      [item.product_id]
+    );
+
+      const itemSubtotal = item.unit_price * item.quantity;
+
       const orderItemResult = await client.query(
         `INSERT INTO order_items 
-         (order_id, product_id, product_name, quantity, unit_price, subtotal, special_instructions)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         RETURNING *`,
-        [
-          order.id,
-          item.product.id,
-          item.product.name,
-          item.quantity,
-          item.unit_price,
-          item.subtotal,
-          item.special_instructions
-        ]
+        (order_id, product_id, product_name, quantity, unit_price, subtotal)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id`,
+        [order.id, item.product_id, productInfo.rows[0].name, item.quantity, item.unit_price, itemSubtotal]
       );
 
-      const orderItem = orderItemResult.rows[0];
+      const orderItemId = orderItemResult.rows[0].id;
 
-      // 5. Insertar extras del item
-      for (const extra of item.extras) {
-        await client.query(
-          `INSERT INTO order_item_extras 
-           (order_item_id, extra_id, name, price)
-           VALUES ($1, $2, $3, $4)`,
-          [orderItem.id, extra.id, extra.name, extra.price]
-        );
+      // Insertar extras del item
+      if (item.extras.length > 0) {
+        for (const extra of item.extras) {
+          await client.query(
+            `INSERT INTO order_item_extras (order_item_id, product_extra_id, price)
+             VALUES ($1, $2, $3)`,
+            [orderItemId, extra.id, extra.price]
+          );
+        }
       }
     }
 
     await client.query('COMMIT');
+    console.log('Orden completada exitosamente');
 
     res.status(201).json({
       message: 'Orden creada exitosamente',
@@ -137,6 +156,8 @@ const createOrder = async (req, res) => {
         tax: parseFloat(order.tax),
         total: parseFloat(order.total),
         payment_method: order.payment_method,
+        street: order.street,
+        city: order.city,
         created_at: order.created_at
       }
     });
@@ -166,6 +187,7 @@ const getUserOrders = async (req, res) => {
       LEFT JOIN addresses a ON o.address_id = a.id
       WHERE o.user_id = $1
     `;
+
     const values = [userId];
 
     if (status) {
@@ -241,7 +263,7 @@ const updateOrderStatus = async (req, res) => {
     const { status } = req.body;
 
     const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'on_delivery', 'delivered', 'cancelled'];
-
+    
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Estado inválido' });
     }

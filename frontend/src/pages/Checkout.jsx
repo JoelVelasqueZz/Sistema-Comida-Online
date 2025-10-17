@@ -35,49 +35,57 @@ function Checkout() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    try {
-      // 1. Preparar items para la orden
-      const orderItems = cartItems.map(item => ({
-        product_id: item.id,
-        quantity: item.quantity,
-        extras: item.extras?.map(e => e.id) || [],
-        special_instructions: item.special_instructions
-      }));
+  try {
+    // 1. Preparar items para la orden
+    const orderItems = cartItems.map(item => ({
+      product_id: item.id,
+      quantity: item.quantity,
+      extras: item.extras?.map(e => e.id) || []
+    }));
 
-      // 2. Crear la orden
-      const orderData = {
-        address_id: '00000000-0000-0000-0000-000000000000', // Temporal (simula una dirección)
-        items: orderItems,
-        payment_method: formData.payment_method,
-        special_instructions: formData.special_instructions
-      };
+    // 2. Crear la orden con dirección en el body (sin address_id)
+    const orderData = {
+      items: orderItems,
+      delivery_address: {
+        street: formData.street,
+        city: formData.city,
+        postal_code: formData.postal_code,
+        reference: formData.reference
+      },
+      payment_method: formData.payment_method,
+      special_instructions: formData.special_instructions
+    };
 
-      const orderResponse = await orderService.createOrder(orderData);
+    console.log('Enviando orden:', orderData);
 
-      // 3. Procesar el pago
-      const paymentData = {
-        order_id: orderResponse.order.id,
-        payment_method: formData.payment_method
-      };
+    const orderResponse = await orderService.createOrder(orderData);
+    console.log('✅ Orden creada:', orderResponse);
 
-      await paymentService.processPayment(paymentData);
+    // 3. Procesar el pago
+    const paymentData = {
+      order_id: orderResponse.order.id,
+      payment_method: formData.payment_method
+    };
 
-      // 4. Limpiar carrito y redirigir
-      clearCart();
-      alert('¡Pedido realizado exitosamente!');
-      navigate('/orders');
+    await paymentService.processPayment(paymentData);
 
-    } catch (err) {
-      console.error('Error al procesar pedido:', err);
-      setError(err.response?.data?.error || 'Error al procesar el pedido');
-    } finally {
-      setLoading(false);
-    }
-  };
+    // 4. Limpiar carrito y redirigir
+    clearCart();
+    alert('¡Pedido realizado exitosamente!');
+    navigate('/orders');
+
+  } catch (err) {
+    console.error('Error al procesar pedido:', err);
+    console.error('   Response:', err.response);
+    setError(err.response?.data?.error || 'Error al procesar el pedido');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const totals = calculateTotals();
 
