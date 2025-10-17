@@ -51,7 +51,7 @@ function Navbar() {
         <div className="navbar-content">
           {/* Logo con gradiente */}
           <Link to="/" className="navbar-logo" onClick={closeMobileMenu}>
-            🍔 Food Delivery
+            🍔 DELIVEO EC
           </Link>
 
           {/* Botón hamburguesa para móvil con animación */}

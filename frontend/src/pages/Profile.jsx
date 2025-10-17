@@ -1,7 +1,7 @@
-import './Profile.css';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
+import './Profile.css';
 
 function Profile() {
   const { user, updateUser, logout } = useAuth();
@@ -57,247 +57,202 @@ function Profile() {
     }
   };
 
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
-      <h1>👤 Mi Perfil</h1>
-
-      {error && <div style={errorStyle}>{error}</div>}
-      {success && <div style={successStyle}>{success}</div>}
-
-      <div style={profileBoxStyle}>
-        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <div style={avatarStyle}>
-            {user?.name?.charAt(0).toUpperCase()}
-          </div>
-          <h2 style={{ margin: '10px 0 5px 0' }}>{user?.name}</h2>
-          <p style={{ color: '#666', margin: 0 }}>{user?.email}</p>
-          <span style={roleBadgeStyle}>
-            {user?.role === 'admin' ? '👑 Administrador' : '👤 Cliente'}
-          </span>
+    <div className="profile-page">
+      <div className="container container-4xl">
+        {/* Header */}
+        <div className="profile-header animate-fade-in-up">
+          <h1 className="heading-1">👤 Mi Perfil</h1>
+          <p className="text-lg text-muted">Gestiona tu información personal</p>
         </div>
 
-        {!isEditing ? (
-          // Vista de perfil
-          <div>
-            <div style={infoRowStyle}>
-              <strong>Nombre:</strong>
-              <span>{user?.name}</span>
-            </div>
-
-            <div style={infoRowStyle}>
-              <strong>Email:</strong>
-              <span>{user?.email}</span>
-            </div>
-
-            <div style={infoRowStyle}>
-              <strong>Teléfono:</strong>
-              <span>{user?.phone || 'No especificado'}</span>
-            </div>
-
-            <div style={infoRowStyle}>
-              <strong>Rol:</strong>
-              <span>{user?.role === 'admin' ? 'Administrador' : 'Cliente'}</span>
-            </div>
-
-            <div style={infoRowStyle}>
-              <strong>Miembro desde:</strong>
-              <span>{new Date(user?.created_at).toLocaleDateString('es-ES', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}</span>
-            </div>
-
-            <button onClick={() => setIsEditing(true)} style={editButtonStyle}>
-              ✏️ Editar Perfil
-            </button>
+        {/* Alerts */}
+        {error && (
+          <div className="alert alert-error animate-shake">
+            <span>⚠️</span>
+            <p>{error}</p>
           </div>
-        ) : (
-          // Formulario de edición
-          <form onSubmit={handleSubmit}>
-            <div style={inputGroupStyle}>
-              <label>Nombre completo:</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                style={inputStyle}
-              />
-            </div>
-
-            <div style={inputGroupStyle}>
-              <label>Teléfono:</label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                style={inputStyle}
-                placeholder="0999999999"
-              />
-            </div>
-
-            <div style={inputGroupStyle}>
-              <label>Email:</label>
-              <input
-                type="email"
-                value={user?.email}
-                disabled
-                style={{ ...inputStyle, backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
-              />
-              <small style={{ color: '#666', fontSize: '12px' }}>
-                El email no se puede cambiar
-              </small>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-              <button
-                type="submit"
-                disabled={loading}
-                style={saveButtonStyle}
-              >
-                {loading ? 'Guardando...' : '💾 Guardar Cambios'}
-              </button>
-              <button
-                type="button"
-                onClick={handleCancel}
-                style={cancelButtonStyle}
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
         )}
 
-        <hr style={{ margin: '30px 0', border: 'none', borderTop: '1px solid #eee' }} />
+        {success && (
+          <div className="alert alert-success animate-fade-in-down">
+            <span>✓</span>
+            <p>{success}</p>
+          </div>
+        )}
 
-        <button onClick={handleLogout} style={logoutButtonStyle}>
-          🚪 Cerrar Sesión
-        </button>
+        {/* Profile Card */}
+        <div className="profile-card card card-elevated animate-fade-in-up animate-delay-1">
+          {/* Avatar Section */}
+          <div className="profile-avatar-section">
+            <div className="avatar-wrapper">
+              <div className="avatar-gradient-border">
+                <div className="avatar">
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+              </div>
+              <div className="avatar-status-indicator"></div>
+            </div>
+            <h2 className="profile-name">{user?.name}</h2>
+            <p className="profile-email text-muted">{user?.email}</p>
+            <span className={`profile-role-badge badge ${
+              user?.role === 'admin' ? 'badge-primary' : 'badge-info'
+            }`}>
+              {user?.role === 'admin' ? '👑 Administrador' : '👤 Cliente'}
+            </span>
+          </div>
+
+          {/* Profile Content */}
+          {!isEditing ? (
+            <div className="profile-view">
+              <div className="info-section">
+                <h3 className="info-section-title heading-5">Información Personal</h3>
+
+                <div className="info-grid">
+                  <div className="info-item">
+                    <div className="info-icon">👤</div>
+                    <div className="info-content">
+                      <span className="info-label">Nombre completo</span>
+                      <span className="info-value">{user?.name}</span>
+                    </div>
+                  </div>
+
+                  <div className="info-item">
+                    <div className="info-icon">📧</div>
+                    <div className="info-content">
+                      <span className="info-label">Email</span>
+                      <span className="info-value">{user?.email}</span>
+                    </div>
+                  </div>
+
+                  <div className="info-item">
+                    <div className="info-icon">📱</div>
+                    <div className="info-content">
+                      <span className="info-label">Teléfono</span>
+                      <span className="info-value">{user?.phone || 'No especificado'}</span>
+                    </div>
+                  </div>
+
+                  <div className="info-item">
+                    <div className="info-icon">🎭</div>
+                    <div className="info-content">
+                      <span className="info-label">Rol</span>
+                      <span className="info-value">
+                        {user?.role === 'admin' ? 'Administrador' : 'Cliente'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="info-item">
+                    <div className="info-icon">📅</div>
+                    <div className="info-content">
+                      <span className="info-label">Miembro desde</span>
+                      <span className="info-value">{formatDate(user?.created_at)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsEditing(true)}
+                className="btn btn-primary btn-lg btn-block hover-lift mt-6"
+              >
+                ✏️ Editar Perfil
+              </button>
+            </div>
+          ) : (
+            <div className="profile-edit">
+              <h3 className="info-section-title heading-5 mb-6">Editar Información</h3>
+
+              <form onSubmit={handleSubmit} className="edit-form">
+                <div className="form-group">
+                  <label className="label">Nombre completo</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    className="input input-lg"
+                    placeholder="Juan Pérez"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="label">Teléfono</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="input input-lg"
+                    placeholder="0999999999"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="label">Email</label>
+                  <input
+                    type="email"
+                    value={user?.email}
+                    disabled
+                    className="input input-lg"
+                    style={{ backgroundColor: 'var(--gray-100)', cursor: 'not-allowed' }}
+                  />
+                  <p className="helper-text">
+                    El email no se puede cambiar
+                  </p>
+                </div>
+
+                <div className="edit-actions">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn btn-success btn-lg hover-lift"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="loading-spinner"></span>
+                        Guardando...
+                      </>
+                    ) : (
+                      '💾 Guardar Cambios'
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="btn btn-outline-secondary btn-lg hover-shrink"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Logout Section */}
+          <div className="logout-section">
+            <hr className="section-divider" />
+            <button
+              onClick={handleLogout}
+              className="btn btn-danger btn-block hover-shrink"
+            >
+              🚪 Cerrar Sesión
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-
-const profileBoxStyle = {
-  backgroundColor: 'white',
-  padding: '40px',
-  borderRadius: '10px',
-  boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-  marginTop: '20px'
-};
-
-const avatarStyle = {
-  width: '100px',
-  height: '100px',
-  borderRadius: '50%',
-  backgroundColor: '#007bff',
-  color: 'white',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '48px',
-  fontWeight: 'bold',
-  margin: '0 auto'
-};
-
-const roleBadgeStyle = {
-  display: 'inline-block',
-  marginTop: '10px',
-  padding: '5px 15px',
-  backgroundColor: '#e7f3ff',
-  color: '#007bff',
-  borderRadius: '20px',
-  fontSize: '14px',
-  fontWeight: 'bold'
-};
-
-const infoRowStyle = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  padding: '15px',
-  borderBottom: '1px solid #f0f0f0',
-  fontSize: '16px'
-};
-
-const inputGroupStyle = {
-  marginBottom: '20px'
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: '10px',
-  fontSize: '16px',
-  border: '1px solid #ddd',
-  borderRadius: '5px',
-  marginTop: '5px'
-};
-
-const editButtonStyle = {
-  width: '100%',
-  padding: '12px',
-  fontSize: '16px',
-  backgroundColor: '#007bff',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer',
-  fontWeight: 'bold',
-  marginTop: '20px'
-};
-
-const saveButtonStyle = {
-  flex: 1,
-  padding: '12px',
-  fontSize: '16px',
-  backgroundColor: '#28a745',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer',
-  fontWeight: 'bold'
-};
-
-const cancelButtonStyle = {
-  flex: 1,
-  padding: '12px',
-  fontSize: '16px',
-  backgroundColor: '#6c757d',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer',
-  fontWeight: 'bold'
-};
-
-const logoutButtonStyle = {
-  width: '100%',
-  padding: '12px',
-  fontSize: '16px',
-  backgroundColor: '#dc3545',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer',
-  fontWeight: 'bold'
-};
-
-const errorStyle = {
-  backgroundColor: '#f8d7da',
-  color: '#721c24',
-  padding: '15px',
-  borderRadius: '5px',
-  marginBottom: '20px'
-};
-
-const successStyle = {
-  backgroundColor: '#d4edda',
-  color: '#155724',
-  padding: '15px',
-  borderRadius: '5px',
-  marginBottom: '20px'
-};
 
 export default Profile;
