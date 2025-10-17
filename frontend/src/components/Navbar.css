@@ -1,0 +1,250 @@
+/*
+ * ============================================
+ * NAVBAR STYLES - FOOD DELIVERY APP
+ * ============================================
+ */
+
+/* Navbar Container */
+.navbar-modern {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base);
+}
+
+.navbar-modern.scrolled {
+  box-shadow: var(--shadow-md);
+}
+
+/* Navbar Content */
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) 0;
+  gap: var(--space-6);
+}
+
+/* Logo */
+.navbar-logo {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform var(--transition-base);
+}
+
+.navbar-logo:hover {
+  transform: scale(1.05);
+}
+
+/* Hamburger Menu (Mobile) */
+.hamburger-menu {
+  display: none;
+  background: none;
+  border: none;
+  font-size: var(--text-3xl);
+  color: var(--dark);
+  cursor: pointer;
+  padding: var(--space-2);
+  transition: color var(--transition-base);
+}
+
+.hamburger-menu:hover {
+  color: var(--primary);
+}
+
+/* Navbar Menu Container */
+.navbar-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex: 1;
+  justify-content: flex-end;
+}
+
+/* Navbar Links */
+.navbar-link {
+  position: relative;
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--dark);
+  text-decoration: none;
+  padding: var(--space-2) var(--space-3);
+  transition: color var(--transition-base);
+  white-space: nowrap;
+}
+
+.navbar-link:hover {
+  color: var(--primary);
+}
+
+/* Hover Underline Effect */
+.navbar-link.hover-underline::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 3px;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-base);
+}
+
+.navbar-link.hover-underline:hover::after {
+  width: 80%;
+}
+
+/* Cart Button */
+.navbar-cart {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--dark);
+  background: var(--gray-100);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: all var(--transition-base);
+  white-space: nowrap;
+}
+
+.navbar-cart:hover {
+  background: var(--primary-lighter);
+  color: var(--primary-darker);
+  transform: scale(1.05);
+}
+
+/* Cart Badge */
+.cart-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  color: var(--white);
+  background: var(--gradient-warm);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  animation: cartBadgeBounce 0.4s ease-out;
+}
+
+/* Responsive - Tablet y menores */
+@media (max-width: 1024px) {
+  .hamburger-menu {
+    display: block;
+    z-index: var(--z-fixed);
+  }
+
+  .navbar-menu {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 280px;
+    height: 100vh;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: var(--space-20) var(--space-6) var(--space-6);
+    background: var(--white);
+    box-shadow: var(--shadow-xl);
+    transition: right var(--transition-base);
+    overflow-y: auto;
+    gap: var(--space-4);
+  }
+
+  .navbar-menu.mobile-open {
+    right: 0;
+  }
+
+  .navbar-link,
+  .navbar-cart {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+  }
+
+  .navbar-link:hover {
+    background: var(--gray-100);
+  }
+
+  .navbar-link.hover-underline::after {
+    display: none;
+  }
+
+  .navbar-cart {
+    justify-content: center;
+  }
+
+  /* Botones en móvil */
+  .navbar-menu .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Overlay para cerrar el menú */
+  .navbar-menu.mobile-open::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+    animation: fadeIn var(--transition-base);
+  }
+}
+
+/* Responsive - Mobile pequeño */
+@media (max-width: 640px) {
+  .navbar-content {
+    padding: var(--space-3) 0;
+  }
+
+  .navbar-logo {
+    font-size: var(--text-xl);
+  }
+
+  .navbar-menu {
+    width: 100%;
+    max-width: 320px;
+  }
+}
+
+/* Animaciones adicionales */
+@keyframes cartBadgeBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+}
+
+/* Estado activo del link */
+.navbar-link.active {
+  color: var(--primary);
+  font-weight: var(--font-semibold);
+}
+
+.navbar-link.active.hover-underline::after {
+  width: 80%;
+}

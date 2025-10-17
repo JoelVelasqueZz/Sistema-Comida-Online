@@ -1,70 +1,112 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import './Home.css';
 
 function Home() {
   const { user } = useAuth();
 
   return (
-    <div style={{ padding: '40px', textAlign: 'center' }}>
-      <h1>🍔 Bienvenido a Food Delivery</h1>
-      <p style={{ fontSize: '18px', color: '#666', margin: '20px 0' }}>
-        Ordena tu comida favorita y recíbela en tu puerta
-      </p>
+    <div className="home-page">
+      {/* Hero Section */}
+      <section className="hero-section animate-fade-in-up">
+        <div className="container container-7xl">
+          <div className="hero-content">
+            <h1 className="hero-title text-gradient">
+              Bienvenido a Food Delivery
+            </h1>
+            <p className="hero-subtitle">
+              Ordena tu comida favorita y recíbela en tu puerta en minutos
+            </p>
 
-      {user ? (
-        <div>
-          <p style={{ marginBottom: '20px' }}>¡Hola, {user.name}!</p>
-          <Link to="/menu">
-            <button style={buttonStyle}>
-              Ver Menú 🍕
-            </button>
-          </Link>
+            {user ? (
+              <div className="hero-actions animate-fade-in-up animate-delay-1">
+                <p className="welcome-text">
+                  ¡Hola, <span className="text-primary font-semibold">{user.name}</span>! 👋
+                </p>
+                <Link to="/menu">
+                  <button className="btn btn-primary btn-lg hover-lift">
+                    Ver Menú Completo 🍕
+                  </button>
+                </Link>
+              </div>
+            ) : (
+              <div className="hero-actions animate-fade-in-up animate-delay-1">
+                <Link to="/register">
+                  <button className="btn btn-primary btn-lg hover-lift">
+                    Comenzar Ahora
+                  </button>
+                </Link>
+                <Link to="/login">
+                  <button className="btn btn-outline btn-lg hover-grow">
+                    Iniciar Sesión
+                  </button>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
-      ) : (
-        <div>
-          <Link to="/login">
-            <button style={buttonStyle}>
-              Iniciar Sesión
-            </button>
-          </Link>
-          <Link to="/register">
-            <button style={{ ...buttonStyle, marginLeft: '10px', backgroundColor: '#28a745' }}>
-              Registrarse
-            </button>
-          </Link>
-        </div>
-      )}
+      </section>
 
-      <div style={{ marginTop: '40px' }}>
-        <h2>¿Por qué elegirnos?</h2>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '30px', marginTop: '20px' }}>
-          <div>
-            <h3>🚀 Rápido</h3>
-            <p>Entrega en 30 minutos</p>
-          </div>
-          <div>
-            <h3>🍕 Delicioso</h3>
-            <p>Comida fresca y sabrosa</p>
-          </div>
-          <div>
-            <h3>💳 Seguro</h3>
-            <p>Pagos protegidos</p>
+      {/* Features Section */}
+      <section className="features-section">
+        <div className="container container-7xl">
+          <h2 className="features-title heading-2 text-center mb-8">
+            ¿Por qué elegirnos?
+          </h2>
+
+          <div className="features-grid grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <div className="feature-card card card-body hover-lift animate-fade-in-up">
+              <div className="feature-icon">🚀</div>
+              <h3 className="feature-card-title heading-4">Entrega Rápida</h3>
+              <p className="feature-card-description text-muted">
+                Recibe tu pedido en menos de 30 minutos. Garantizado.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="feature-card card card-body hover-lift animate-fade-in-up animate-delay-1">
+              <div className="feature-icon">🍕</div>
+              <h3 className="feature-card-title heading-4">Comida Deliciosa</h3>
+              <p className="feature-card-description text-muted">
+                Platos frescos preparados por los mejores restaurantes.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="feature-card card card-body hover-lift animate-fade-in-up animate-delay-2">
+              <div className="feature-icon">💳</div>
+              <h3 className="feature-card-title heading-4">Pagos Seguros</h3>
+              <p className="feature-card-description text-muted">
+                Transacciones protegidas con encriptación de última generación.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="cta-section">
+        <div className="container container-7xl">
+          <div className="cta-card card-elevated animate-scale-in">
+            <h2 className="heading-2 text-center mb-4">
+              ¿Listo para ordenar?
+            </h2>
+            <p className="text-center text-lg text-muted mb-6">
+              Descubre nuestro menú completo y encuentra tus platos favoritos
+            </p>
+            <div className="flex justify-center">
+              <Link to="/menu">
+                <button className="btn btn-secondary btn-xl hover-lift">
+                  Explorar Menú 🍽️
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
-
-const buttonStyle = {
-  padding: '12px 30px',
-  fontSize: '16px',
-  backgroundColor: '#007bff',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer',
-  fontWeight: 'bold'
-};
 
 export default Home;

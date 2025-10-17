@@ -1,3 +1,4 @@
+import './Profile.css';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';

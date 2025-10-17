@@ -1,0 +1,292 @@
+/*
+ * ============================================
+ * DESIGN SYSTEM - FOOD DELIVERY APP
+ * ============================================
+ *
+ * Sistema de diseño profesional basado en variables CSS
+ * Inspirado en: Uber Eats, DoorDash, Airbnb
+ *
+ * Uso: Importar en index.css
+ * Las variables están disponibles globalmente usando var(--variable-name)
+ */
+
+:root {
+  /* ==================== COLORES PRINCIPALES ==================== */
+
+  /* Colores Primarios - Temática Comida */
+  --primary: #FF6B35;
+  --primary-light: #FF8C5F;
+  --primary-dark: #E55420;
+  --primary-lighter: #FFB89A;
+  --primary-darker: #CC4A1A;
+
+  /* Colores Secundarios */
+  --secondary: #F7931E;
+  --secondary-light: #FFAD4D;
+  --secondary-dark: #D97706;
+  --secondary-lighter: #FFC87A;
+  --secondary-darker: #B85F00;
+
+  /* Colores de Acento */
+  --accent: #C1121F;
+  --accent-light: #D9424D;
+  --accent-dark: #8B0000;
+  --accent-lighter: #E87A82;
+  --accent-darker: #6B0000;
+
+  /* Colores de Estado */
+  --success: #06D6A0;
+  --success-light: #38E4B7;
+  --success-dark: #04A57A;
+  --success-bg: #E6FAF5;
+
+  --warning: #FFB800;
+  --warning-light: #FFCE3D;
+  --warning-dark: #CC9300;
+  --warning-bg: #FFF8E6;
+
+  --error: #EF4444;
+  --error-light: #F87171;
+  --error-dark: #DC2626;
+  --error-bg: #FEE2E2;
+
+  --info: #3B82F6;
+  --info-light: #60A5FA;
+  --info-dark: #2563EB;
+  --info-bg: #DBEAFE;
+
+  /* Colores Neutrales */
+  --dark: #1A1A1D;
+  --dark-light: #2E2E32;
+  --dark-lighter: #4A4A4F;
+
+  --light: #F8F9FA;
+  --light-dark: #E9ECEF;
+  --light-darker: #DEE2E6;
+
+  --white: #FFFFFF;
+  --black: #000000;
+
+  /* Grises */
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+
+  /* ==================== GRADIENTES ==================== */
+
+  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  --gradient-primary-light: linear-gradient(135deg, var(--primary-light) 0%, var(--secondary-light) 100%);
+  --gradient-warm: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFB800 100%);
+  --gradient-cool: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%);
+  --gradient-success: linear-gradient(135deg, var(--success) 0%, #00B87C 100%);
+  --gradient-dark: linear-gradient(135deg, var(--dark) 0%, var(--dark-light) 100%);
+  --gradient-overlay: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.7) 100%);
+
+  /* ==================== TIPOGRAFÍA ==================== */
+
+  /* Font Families - System Fonts para mejor rendimiento */
+  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-secondary: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+
+  /* Font Sizes */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+  --text-5xl: 3rem;        /* 48px */
+  --text-6xl: 3.75rem;     /* 60px */
+
+  /* Font Weights */
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  /* Letter Spacing */
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* ==================== ESPACIADO ==================== */
+
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+
+  /* ==================== BORDER RADIUS ==================== */
+
+  --radius-none: 0;
+  --radius-sm: 0.25rem;    /* 4px */
+  --radius-base: 0.5rem;   /* 8px */
+  --radius-md: 0.75rem;    /* 12px */
+  --radius-lg: 1rem;       /* 16px */
+  --radius-xl: 1.5rem;     /* 24px */
+  --radius-2xl: 2rem;      /* 32px */
+  --radius-full: 9999px;   /* Círculo completo */
+
+  /* ==================== SOMBRAS ==================== */
+
+  /* Sombras de Elevación */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* Sombras con Color */
+  --shadow-primary: 0 10px 25px -5px rgba(255, 107, 53, 0.3);
+  --shadow-secondary: 0 10px 25px -5px rgba(247, 147, 30, 0.3);
+  --shadow-accent: 0 10px 25px -5px rgba(193, 18, 31, 0.3);
+  --shadow-success: 0 10px 25px -5px rgba(6, 214, 160, 0.3);
+
+  /* Sombras Inner */
+  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
+  --shadow-inner-lg: inset 0 4px 8px 0 rgba(0, 0, 0, 0.1);
+
+  /* ==================== TRANSITIONS ==================== */
+
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-smooth: 400ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* ==================== Z-INDEX ==================== */
+
+  --z-base: 1;
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+
+  /* ==================== BREAKPOINTS (para referencia en media queries) ==================== */
+
+  --breakpoint-xs: 0;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* ==================== OPACIDAD ==================== */
+
+  --opacity-0: 0;
+  --opacity-10: 0.1;
+  --opacity-20: 0.2;
+  --opacity-30: 0.3;
+  --opacity-40: 0.4;
+  --opacity-50: 0.5;
+  --opacity-60: 0.6;
+  --opacity-70: 0.7;
+  --opacity-80: 0.8;
+  --opacity-90: 0.9;
+  --opacity-100: 1;
+
+  /* ==================== ANCHOS MÁXIMOS (Containers) ==================== */
+
+  --container-xs: 20rem;    /* 320px */
+  --container-sm: 24rem;    /* 384px */
+  --container-md: 28rem;    /* 448px */
+  --container-lg: 32rem;    /* 512px */
+  --container-xl: 36rem;    /* 576px */
+  --container-2xl: 42rem;   /* 672px */
+  --container-3xl: 48rem;   /* 768px */
+  --container-4xl: 56rem;   /* 896px */
+  --container-5xl: 64rem;   /* 1024px */
+  --container-6xl: 72rem;   /* 1152px */
+  --container-7xl: 80rem;   /* 1280px */
+  --container-full: 100%;
+
+  /* ==================== BLUR ==================== */
+
+  --blur-sm: 4px;
+  --blur-base: 8px;
+  --blur-md: 12px;
+  --blur-lg: 16px;
+  --blur-xl: 24px;
+  --blur-2xl: 40px;
+
+  /* ==================== BORDER WIDTH ==================== */
+
+  --border-0: 0;
+  --border-1: 1px;
+  --border-2: 2px;
+  --border-4: 4px;
+  --border-8: 8px;
+}
+
+/* ==================== RESET Y ESTILOS BASE ==================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
+  line-height: var(--leading-normal);
+  color: var(--dark);
+  background-color: var(--light);
+}
+
+/* ==================== MODO OSCURO (Opcional) ==================== */
+
+@media (prefers-color-scheme: dark) {
+  .dark-mode {
+    --dark: #F8F9FA;
+    --light: #1A1A1D;
+    --gray-50: #111827;
+    --gray-100: #1F2937;
+    --gray-200: #374151;
+    --gray-300: #4B5563;
+  }
+}

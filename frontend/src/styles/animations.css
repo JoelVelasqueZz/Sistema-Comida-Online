@@ -1,0 +1,854 @@
+/*
+ * ============================================
+ * ANIMATIONS - FOOD DELIVERY APP
+ * ============================================
+ *
+ * Animaciones, transiciones y efectos interactivos
+ * Inspirado en: Uber Eats, DoorDash, Airbnb
+ *
+ * ÍNDICE:
+ * 1. Keyframe Animations
+ * 2. Hover Effects
+ * 3. Loading States
+ * 4. Entrance Animations
+ * 5. Exit Animations
+ * 6. Micro-interactions
+ * 7. Scroll Animations
+ */
+
+/* ==================== 1. KEYFRAME ANIMATIONS ==================== */
+
+/* Fade In */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Fade In Up */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade In Down */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade In Left */
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Fade In Right */
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Scale In */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Scale Out */
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+/* Bounce */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Pulse */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
+}
+
+/* Shake */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+/* Spin */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Slide In Up */
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Slide Out Down */
+@keyframes slideOutDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* Float */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Glow */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--primary), 0 0 30px var(--primary);
+  }
+}
+
+/* Progress Bar */
+@keyframes progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+/* Shimmer (Loading Effect) */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* ==================== 2. HOVER EFFECTS ==================== */
+
+/* Hover Lift */
+.hover-lift {
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Hover Lift Strong */
+.hover-lift-strong {
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.hover-lift-strong:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Hover Grow */
+.hover-grow {
+  transition: transform var(--transition-base);
+}
+
+.hover-grow:hover {
+  transform: scale(1.05);
+}
+
+/* Hover Grow Strong */
+.hover-grow-strong {
+  transition: transform var(--transition-base);
+}
+
+.hover-grow-strong:hover {
+  transform: scale(1.1);
+}
+
+/* Hover Shrink */
+.hover-shrink {
+  transition: transform var(--transition-base);
+}
+
+.hover-shrink:hover {
+  transform: scale(0.95);
+}
+
+/* Hover Glow */
+.hover-glow {
+  transition: box-shadow var(--transition-base);
+}
+
+.hover-glow:hover {
+  box-shadow: var(--shadow-primary);
+}
+
+/* Hover Underline */
+.hover-underline {
+  position: relative;
+  text-decoration: none;
+}
+
+.hover-underline::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--primary);
+  transition: width var(--transition-base);
+}
+
+.hover-underline:hover::after {
+  width: 100%;
+}
+
+/* Hover Brightness */
+.hover-bright {
+  transition: filter var(--transition-base);
+}
+
+.hover-bright:hover {
+  filter: brightness(1.1);
+}
+
+/* Hover Blur */
+.hover-blur {
+  transition: filter var(--transition-base);
+}
+
+.hover-blur:hover {
+  filter: blur(2px);
+}
+
+/* Hover Rotate */
+.hover-rotate {
+  transition: transform var(--transition-base);
+}
+
+.hover-rotate:hover {
+  transform: rotate(5deg);
+}
+
+/* Hover Gradient Shift */
+.hover-gradient-shift {
+  background-size: 200% 200%;
+  transition: background-position var(--transition-slow);
+}
+
+.hover-gradient-shift:hover {
+  background-position: right center;
+}
+
+/* ==================== 3. LOADING STATES ==================== */
+
+/* Loading Spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-full);
+  border-top-color: var(--white);
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-spinner-primary {
+  border-color: rgba(255, 107, 53, 0.2);
+  border-top-color: var(--primary);
+}
+
+.loading-spinner-lg {
+  width: 40px;
+  height: 40px;
+  border-width: 4px;
+}
+
+.loading-spinner-xl {
+  width: 60px;
+  height: 60px;
+  border-width: 5px;
+}
+
+/* Loading Dots */
+.loading-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.loading-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  animation: pulse 1.4s infinite;
+}
+
+.loading-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Skeleton Loading */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--gray-200) 0%,
+    var(--gray-100) 50%,
+    var(--gray-200) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-base);
+}
+
+.skeleton-text {
+  height: 1rem;
+  margin-bottom: var(--space-2);
+}
+
+.skeleton-title {
+  height: 2rem;
+  width: 60%;
+  margin-bottom: var(--space-4);
+}
+
+.skeleton-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-card {
+  height: 200px;
+  border-radius: var(--radius-xl);
+}
+
+/* Progress Bar */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--gradient-primary);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+.progress-bar-animated {
+  animation: progress 2s infinite;
+}
+
+/* Pulse Loading */
+.pulse-loading {
+  animation: pulse 2s infinite;
+}
+
+/* ==================== 4. ENTRANCE ANIMATIONS ==================== */
+
+/* Fade In Animation */
+.animate-fade-in {
+  animation: fadeIn var(--transition-base) ease-out;
+}
+
+/* Fade In Up Animation */
+.animate-fade-in-up {
+  animation: fadeInUp var(--transition-base) ease-out;
+}
+
+/* Fade In Down Animation */
+.animate-fade-in-down {
+  animation: fadeInDown var(--transition-base) ease-out;
+}
+
+/* Fade In Left Animation */
+.animate-fade-in-left {
+  animation: fadeInLeft var(--transition-base) ease-out;
+}
+
+/* Fade In Right Animation */
+.animate-fade-in-right {
+  animation: fadeInRight var(--transition-base) ease-out;
+}
+
+/* Scale In Animation */
+.animate-scale-in {
+  animation: scaleIn var(--transition-base) ease-out;
+}
+
+/* Slide In Up Animation */
+.animate-slide-in-up {
+  animation: slideInUp var(--transition-base) ease-out;
+}
+
+/* Bounce Animation */
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+/* Float Animation */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Delayed Animations (Stagger Effect) */
+.animate-delay-1 {
+  animation-delay: 0.1s;
+}
+
+.animate-delay-2 {
+  animation-delay: 0.2s;
+}
+
+.animate-delay-3 {
+  animation-delay: 0.3s;
+}
+
+.animate-delay-4 {
+  animation-delay: 0.4s;
+}
+
+.animate-delay-5 {
+  animation-delay: 0.5s;
+}
+
+/* ==================== 5. EXIT ANIMATIONS ==================== */
+
+/* Fade Out */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.animate-fade-out {
+  animation: fadeOut var(--transition-base) ease-out;
+}
+
+/* Scale Out Animation */
+.animate-scale-out {
+  animation: scaleOut var(--transition-base) ease-out;
+}
+
+/* Slide Out Down Animation */
+.animate-slide-out-down {
+  animation: slideOutDown var(--transition-base) ease-out;
+}
+
+/* ==================== 6. MICRO-INTERACTIONS ==================== */
+
+/* Button Press Effect */
+.btn-press {
+  transition: transform var(--transition-fast);
+}
+
+.btn-press:active {
+  transform: scale(0.95);
+}
+
+/* Ripple Effect Container */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-container::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.5);
+  transform: translate(-50%, -50%);
+  transition: width var(--transition-slow), height var(--transition-slow);
+}
+
+.ripple-container:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Focus Ring */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.3);
+  border-radius: var(--radius-base);
+}
+
+/* Icon Spin on Hover */
+.icon-spin-hover {
+  transition: transform var(--transition-base);
+}
+
+.icon-spin-hover:hover {
+  transform: rotate(360deg);
+}
+
+/* Wiggle */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+/* Heart Beat */
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  10%, 30% {
+    transform: scale(0.9);
+  }
+  20%, 40%, 60%, 80% {
+    transform: scale(1.1);
+  }
+  50%, 70% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-heartbeat {
+  animation: heartbeat 1.3s ease-in-out infinite;
+}
+
+/* Success Checkmark Animation */
+@keyframes checkmark {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-checkmark {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: checkmark 0.5s ease-out forwards;
+}
+
+/* ==================== 7. SCROLL ANIMATIONS ==================== */
+
+/* Parallax Effect (usar con JavaScript) */
+.parallax {
+  transition: transform var(--transition-slow);
+}
+
+/* Reveal on Scroll (usar con JavaScript/Intersection Observer) */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Sticky Header Animation */
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background: var(--white);
+  box-shadow: none;
+  transition: box-shadow var(--transition-base);
+}
+
+.sticky-header.scrolled {
+  box-shadow: var(--shadow-md);
+}
+
+/* ==================== 8. TOAST/NOTIFICATION ANIMATIONS ==================== */
+
+/* Toast Slide In */
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-toast-in {
+  animation: toastSlideIn var(--transition-base) ease-out;
+}
+
+/* Toast Slide Out */
+@keyframes toastSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-toast-out {
+  animation: toastSlideOut var(--transition-base) ease-out;
+}
+
+/* ==================== 9. MODAL ANIMATIONS ==================== */
+
+/* Modal Backdrop Fade In */
+.modal-backdrop-enter {
+  animation: fadeIn var(--transition-base) ease-out;
+}
+
+/* Modal Backdrop Fade Out */
+.modal-backdrop-exit {
+  animation: fadeOut var(--transition-base) ease-out;
+}
+
+/* Modal Content Scale In */
+.modal-content-enter {
+  animation: scaleIn var(--transition-base) ease-out;
+}
+
+/* Modal Content Scale Out */
+.modal-content-exit {
+  animation: scaleOut var(--transition-base) ease-out;
+}
+
+/* ==================== 10. IMAGE EFFECTS ==================== */
+
+/* Image Zoom on Hover */
+.img-zoom-container {
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+}
+
+.img-zoom {
+  transition: transform var(--transition-slow);
+}
+
+.img-zoom:hover {
+  transform: scale(1.1);
+}
+
+/* Image Grayscale to Color */
+.img-grayscale {
+  filter: grayscale(100%);
+  transition: filter var(--transition-base);
+}
+
+.img-grayscale:hover {
+  filter: grayscale(0%);
+}
+
+/* Image Overlay Fade */
+.img-overlay-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+}
+
+.img-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gradient-overlay);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+}
+
+.img-overlay-container:hover .img-overlay {
+  opacity: 1;
+}
+
+/* ==================== 11. COUNTER ANIMATION ==================== */
+
+/* Number Count Up (usar con JavaScript) */
+.counter {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==================== 12. SMOOTH SCROLL ==================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Disable animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==================== 13. CUSTOM ANIMATIONS ==================== */
+
+/* Food Item Appear (para menu items) */
+@keyframes foodItemAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-food-appear {
+  animation: foodItemAppear 0.4s ease-out;
+}
+
+/* Cart Badge Bounce (para notificaciones de carrito) */
+@keyframes cartBadgeBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+}
+
+.animate-cart-badge {
+  animation: cartBadgeBounce 0.4s ease-out;
+}
+
+/* Order Status Update */
+@keyframes statusUpdate {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 15px rgba(6, 214, 160, 0);
+  }
+}
+
+.animate-status-update {
+  animation: statusUpdate 0.6s ease-out;
+}

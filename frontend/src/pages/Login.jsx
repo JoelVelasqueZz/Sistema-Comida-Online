@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import './Auth.css';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -27,102 +28,92 @@ function Login() {
   };
 
   return (
-    <div style={containerStyle}>
-      <div style={formBoxStyle}>
-        <h2>🔐 Iniciar Sesión</h2>
-        
-        {error && <div style={errorStyle}>{error}</div>}
-
-        <form onSubmit={handleSubmit}>
-          <div style={inputGroupStyle}>
-            <label>Email:</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={inputStyle}
-              placeholder="tu@email.com"
-            />
+    <div className="auth-page">
+      <div className="auth-container animate-fade-in-up">
+        {/* Auth Card */}
+        <div className="auth-card card card-elevated">
+          {/* Header */}
+          <div className="auth-header">
+            <div className="auth-icon">🔐</div>
+            <h2 className="heading-3">Iniciar Sesión</h2>
+            <p className="text-muted">Accede a tu cuenta para continuar</p>
           </div>
 
-          <div style={inputGroupStyle}>
-            <label>Contraseña:</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={inputStyle}
-              placeholder="••••••••"
-            />
+          {/* Error Alert */}
+          {error && (
+            <div className="alert alert-error animate-shake">
+              <span>⚠️</span>
+              <p>{error}</p>
+            </div>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="auth-form">
+            {/* Email Input */}
+            <div className="form-group">
+              <label className="label">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="input input-lg"
+                placeholder="tu@email.com"
+                autoComplete="email"
+              />
+            </div>
+
+            {/* Password Input */}
+            <div className="form-group">
+              <label className="label">Contraseña</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="input input-lg"
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary btn-lg btn-block hover-lift"
+            >
+              {loading ? (
+                <>
+                  <span className="loading-spinner loading-spinner-primary"></span>
+                  Iniciando sesión...
+                </>
+              ) : (
+                'Iniciar Sesión'
+              )}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="auth-footer">
+            <p className="text-muted">
+              ¿No tienes cuenta?{' '}
+              <Link to="/register" className="auth-link text-primary font-semibold hover-underline">
+                Regístrate aquí
+              </Link>
+            </p>
           </div>
+        </div>
 
-          <button 
-            type="submit" 
-            disabled={loading}
-            style={buttonStyle}
-          >
-            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </button>
-        </form>
-
-        <p style={{ marginTop: '20px', textAlign: 'center' }}>
-          ¿No tienes cuenta? <Link to="/register" style={{ color: '#007bff' }}>Regístrate aquí</Link>
-        </p>
+        {/* Back to Home Link */}
+        <div className="auth-back">
+          <Link to="/" className="text-muted hover-underline">
+            ← Volver al inicio
+          </Link>
+        </div>
       </div>
     </div>
   );
 }
-
-const containerStyle = {
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  minHeight: '80vh',
-  padding: '20px'
-};
-
-const formBoxStyle = {
-  backgroundColor: 'white',
-  padding: '40px',
-  borderRadius: '10px',
-  boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-  width: '100%',
-  maxWidth: '400px'
-};
-
-const inputGroupStyle = {
-  marginBottom: '20px'
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: '10px',
-  fontSize: '16px',
-  border: '1px solid #ddd',
-  borderRadius: '5px',
-  marginTop: '5px'
-};
-
-const buttonStyle = {
-  width: '100%',
-  padding: '12px',
-  fontSize: '16px',
-  backgroundColor: '#007bff',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer',
-  fontWeight: 'bold'
-};
-
-const errorStyle = {
-  backgroundColor: '#f8d7da',
-  color: '#721c24',
-  padding: '10px',
-  borderRadius: '5px',
-  marginBottom: '20px'
-};
 
 export default Login;

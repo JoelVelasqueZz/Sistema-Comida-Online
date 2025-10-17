@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { menuService } from '../services/menuService';
 import { useCart } from '../context/CartContext';
+import './Menu.css';
 
 function Menu() {
   const [categories, setCategories] = useState([]);
@@ -10,6 +11,7 @@ function Menu() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [addedProduct, setAddedProduct] = useState(null);
 
   const { addToCart } = useCart();
 
@@ -57,7 +59,7 @@ function Menu() {
 
   const handleSearch = async () => {
     if (searchTerm.trim().length < 2) {
-      alert('Escribe al menos 2 caracteres para buscar');
+      setError('Escribe al menos 2 caracteres para buscar');
       return;
     }
     try {
@@ -66,8 +68,8 @@ function Menu() {
       setProducts(data.products);
       setSelectedCategory(null);
     } catch (err) {
-    setError('Error al buscar productos');
-    console.error('Error en búsqueda:', err);
+      setError('Error al buscar productos');
+      console.error('Error en búsqueda:', err);
     } finally {
       setLoading(false);
     }
@@ -75,169 +77,123 @@ function Menu() {
 
   const handleAddToCart = (product) => {
     addToCart(product, 1);
-    alert(`${product.name} agregado al carrito`);
+    setAddedProduct(product.id);
+    setTimeout(() => setAddedProduct(null), 2000);
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>🍕 Nuestro Menú</h1>
+    <div className="menu-page">
+      <div className="container container-7xl">
+        {/* Header */}
+        <div className="menu-header animate-fade-in-up">
+          <h1 className="heading-1 text-gradient">🍕 Nuestro Menú</h1>
+          <p className="text-lg text-muted">Descubre nuestros deliciosos platos</p>
+        </div>
 
-      {/* Buscador */}
-      <div style={{ marginBottom: '30px' }}>
-        <input
-          type="text"
-          placeholder="Buscar productos..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-          style={searchInputStyle}
-        />
-        <button onClick={handleSearch} style={searchButtonStyle}>
-          🔍 Buscar
-        </button>
-      </div>
+        {/* Search Bar */}
+        <div className="menu-search animate-fade-in-up animate-delay-1">
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Buscar productos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              className="input input-lg"
+            />
+            <button onClick={handleSearch} className="btn btn-primary hover-lift">
+              🔍 Buscar
+            </button>
+          </div>
+        </div>
 
-      {/* Categorías */}
-      <div style={{ marginBottom: '30px' }}>
-        <button
-          onClick={handleShowAll}
-          style={{
-            ...categoryButtonStyle,
-            backgroundColor: selectedCategory === null ? '#007bff' : '#e0e0e0',
-            color: selectedCategory === null ? 'white' : 'black'
-          }}
-        >
-          Todos
-        </button>
-        {categories.map((category) => (
+        {/* Categories */}
+        <div className="menu-categories animate-fade-in-up animate-delay-2">
           <button
-            key={category.id}
-            onClick={() => handleCategoryClick(category.id)}
-            style={{
-              ...categoryButtonStyle,
-              backgroundColor: selectedCategory === category.id ? '#007bff' : '#e0e0e0',
-              color: selectedCategory === category.id ? 'white' : 'black'
-            }}
+            onClick={handleShowAll}
+            className={`category-chip ${selectedCategory === null ? 'active' : ''} hover-grow`}
           >
-            {category.name}
+            Todos
           </button>
-        ))}
-      </div>
-
-      {/* Productos */}
-      {loading ? (
-        <p>Cargando productos...</p>
-      ) : error ? (
-        <p style={{ color: 'red' }}>{error}</p>
-      ) : products.length === 0 ? (
-        <p>No se encontraron productos</p>
-      ) : (
-        <div style={productsGridStyle}>
-          {products.map((product) => (
-            <div key={product.id} style={productCardStyle}>
-              <img
-                src={product.image_url || 'https://via.placeholder.com/200'}
-                alt={product.name}
-                style={productImageStyle}
-              />
-              <h3 style={{ margin: '10px 0' }}>{product.name}</h3>
-              <p style={{ color: '#666', fontSize: '14px', minHeight: '40px' }}>
-                {product.description}
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#28a745' }}>
-                  ${parseFloat(product.price).toFixed(2)}
-                </span>
-                <div>
-                  <Link to={`/product/${product.id}`}>
-                    <button style={detailButtonStyle}>Ver</button>
-                  </Link>
-                  <button
-                    onClick={() => handleAddToCart(product)}
-                    style={addButtonStyle}
-                  >
-                    + Agregar
-                  </button>
-                </div>
-              </div>
-            </div>
+          {categories.map((category, index) => (
+            <button
+              key={category.id}
+              onClick={() => handleCategoryClick(category.id)}
+              className={`category-chip ${selectedCategory === category.id ? 'active' : ''} hover-grow`}
+              style={{ animationDelay: `${0.3 + index * 0.1}s` }}
+            >
+              {category.name}
+            </button>
           ))}
         </div>
-      )}
+
+        {/* Products Grid */}
+        {loading ? (
+          <div className="menu-loading">
+            <div className="loading-spinner loading-spinner-primary loading-spinner-xl"></div>
+            <p className="text-lg text-muted mt-4">Cargando productos deliciosos...</p>
+          </div>
+        ) : error ? (
+          <div className="alert alert-error animate-shake">
+            <span>⚠️</span>
+            <p>{error}</p>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="menu-empty">
+            <div className="empty-icon">😕</div>
+            <h3 className="heading-3">No se encontraron productos</h3>
+            <p className="text-muted">Intenta con otra búsqueda o categoría</p>
+          </div>
+        ) : (
+          <div className="products-grid grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {products.map((product, index) => (
+              <div
+                key={product.id}
+                className="product-card card-product animate-food-appear"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <Link to={`/product/${product.id}`} className="product-link">
+                  <div className="product-image-container">
+                    <img
+                      src={product.image_url || 'https://via.placeholder.com/200'}
+                      alt={product.name}
+                      className="product-image"
+                    />
+                    <div className="product-overlay">
+                      <span className="view-detail-btn">Ver Detalles</span>
+                    </div>
+                  </div>
+                </Link>
+
+                <div className="product-content">
+                  <h3 className="product-title">{product.name}</h3>
+                  <p className="product-description">{product.description}</p>
+
+                  <div className="product-footer">
+                    <span className="product-price">
+                      ${parseFloat(product.price).toFixed(2)}
+                    </span>
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      className={`btn btn-sm hover-lift ${
+                        addedProduct === product.id ? 'btn-success' : 'btn-primary'
+                      }`}
+                    >
+                      {addedProduct === product.id ? (
+                        <>✓ Agregado</>
+                      ) : (
+                        <>+ Agregar</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-const searchInputStyle = {
-  padding: '10px',
-  fontSize: '16px',
-  border: '1px solid #ddd',
-  borderRadius: '5px',
-  width: '300px',
-  marginRight: '10px'
-};
-
-const searchButtonStyle = {
-  padding: '10px 20px',
-  fontSize: '16px',
-  backgroundColor: '#007bff',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer'
-};
-
-const categoryButtonStyle = {
-  padding: '10px 20px',
-  margin: '0 5px 10px 0',
-  fontSize: '14px',
-  border: 'none',
-  borderRadius: '20px',
-  cursor: 'pointer',
-  fontWeight: 'bold'
-};
-
-const productsGridStyle = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-  gap: '20px'
-};
-
-const productCardStyle = {
-  backgroundColor: 'white',
-  padding: '15px',
-  borderRadius: '10px',
-  boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
-  transition: 'transform 0.2s',
-  cursor: 'pointer'
-};
-
-const productImageStyle = {
-  width: '100%',
-  height: '150px',
-  objectFit: 'cover',
-  borderRadius: '8px'
-};
-
-const detailButtonStyle = {
-  padding: '8px 12px',
-  fontSize: '14px',
-  backgroundColor: '#6c757d',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer',
-  marginRight: '5px'
-};
-
-const addButtonStyle = {
-  padding: '8px 12px',
-  fontSize: '14px',
-  backgroundColor: '#28a745',
-  color: 'white',
-  border: 'none',
-  borderRadius: '5px',
-  cursor: 'pointer'
-};
 
 export default Menu;
