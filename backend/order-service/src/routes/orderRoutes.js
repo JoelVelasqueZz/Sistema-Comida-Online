@@ -21,4 +21,7 @@ router.patch('/:id/status', orderController.updateOrderStatus);
 // Cancelar orden
 router.patch('/:id/cancel', orderController.cancelOrder);
 
+// Confirmar entrega
+router.patch('/:id/confirm-delivery', orderController.confirmDelivery);
+
 module.exports = router;

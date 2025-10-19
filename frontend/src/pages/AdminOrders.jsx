@@ -23,8 +23,7 @@ function AdminOrders() {
     { value: 'pending', label: 'Pendiente', icon: '⏳', color: 'warning' },
     { value: 'confirmed', label: 'Confirmado', icon: '✅', color: 'info' },
     { value: 'preparing', label: 'Preparando', icon: '👨‍🍳', color: 'primary' },
-    { value: 'ready', label: 'Listo', icon: '📦', color: 'success' },
-    { value: 'on_delivery', label: 'En Camino', icon: '🚚', color: 'info' },
+    { value: 'delivering', label: 'En Camino', icon: '🚚', color: 'info' },
     { value: 'delivered', label: 'Entregado', icon: '🎉', color: 'success' },
     { value: 'cancelled', label: 'Cancelado', icon: '❌', color: 'error' }
   ];
@@ -341,7 +340,7 @@ function AdminOrders() {
                 <div className="order-info-summary">
                   <p><strong>Pedido:</strong> #{selectedOrder.id}</p>
                   <p><strong>Cliente:</strong> {selectedOrder.user_name}</p>
-                  <p><strong>Total:</strong> ${selectedOrder.total?.toFixed(2)}</p>
+                  <p><strong>Total:</strong> ${parseFloat(selectedOrder.total || 0).toFixed(2)}</p>
                 </div>
 
                 <div className="form-group">

@@ -5,6 +5,7 @@ require('dotenv').config();
 const orderRoutes = require('./routes/orderRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const pool = require('./config/database');
+const { startSchedulers } = require('./schedulers/orderStatusScheduler');
 
 const app = express();
 const PORT = process.env.PORT || 3003;
@@ -53,4 +54,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Order Service corriendo en http://localhost:${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
+
+  // Iniciar schedulers para cambios automáticos de estado
+  startSchedulers();
 });

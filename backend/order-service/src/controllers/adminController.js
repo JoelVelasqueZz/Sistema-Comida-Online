@@ -24,7 +24,7 @@ const getDashboardStats = async (req, res) => {
     const totalRevenueResult = await pool.query(
       `SELECT COALESCE(SUM(total), 0) as revenue
        FROM orders
-       WHERE status IN ('confirmed', 'preparing', 'ready', 'on_delivery', 'delivered')`
+       WHERE status IN ('confirmed', 'preparing', 'delivering', 'delivered')`
     );
     const totalRevenue = parseFloat(totalRevenueResult.rows[0].revenue);
 
@@ -227,7 +227,7 @@ const updateOrderStatusAdmin = async (req, res) => {
     const { status, notes } = req.body;
     const adminId = req.user.userId;
 
-    const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'on_delivery', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'confirmed', 'preparing', 'delivering', 'delivered', 'cancelled'];
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Estado inválido' });

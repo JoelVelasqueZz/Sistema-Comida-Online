@@ -26,6 +26,12 @@ export const orderService = {
     return response.data;
   },
 
+  // Confirmar entrega (cliente)
+  confirmDelivery: async (id) => {
+    const response = await api.patch(`/orders/${id}/confirm-delivery`);
+    return response.data;
+  },
+
   // Actualizar estado (admin)
   updateOrderStatus: async (id, status) => {
     const response = await api.patch(`/orders/${id}/status`, { status });

@@ -274,14 +274,14 @@ const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'on_delivery', 'delivered', 'cancelled'];
-    
+    const validStatuses = ['pending', 'confirmed', 'preparing', 'delivering', 'delivered', 'cancelled'];
+
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Estado inválido' });
     }
 
     const result = await pool.query(
-      `UPDATE orders 
+      `UPDATE orders
        SET status = $1, updated_at = CURRENT_TIMESTAMP
        WHERE id = $2
        RETURNING *`,
@@ -313,7 +313,7 @@ const cancelOrder = async (req, res) => {
 
     // Solo se pueden cancelar órdenes en estado 'pending' o 'confirmed'
     const result = await pool.query(
-      `UPDATE orders 
+      `UPDATE orders
        SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP
        WHERE id = $1 AND user_id = $2 AND status IN ('pending', 'confirmed')
        RETURNING *`,
@@ -321,8 +321,8 @@ const cancelOrder = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(400).json({ 
-        error: 'No se puede cancelar la orden. Ya está en proceso o no existe.' 
+      return res.status(400).json({
+        error: 'No se puede cancelar la orden. Ya está en proceso o no existe.'
       });
     }
 
@@ -337,10 +337,60 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+// ============================================
+// CONFIRMAR ENTREGA (CLIENTE)
+// ============================================
+const confirmDelivery = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    console.log(`📦 Cliente ${userId} confirmando entrega de orden ${id}`);
+
+    // Solo se puede confirmar entrega si está en estado 'delivering'
+    const result = await pool.query(
+      `UPDATE orders
+       SET status = 'delivered', updated_at = CURRENT_TIMESTAMP
+       WHERE id = $1 AND user_id = $2 AND status = 'delivering'
+       RETURNING *`,
+      [id, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(400).json({
+        error: 'No se puede confirmar la entrega. El pedido no está en camino o no existe.'
+      });
+    }
+
+    // Registrar en historial
+    try {
+      await pool.query(
+        `INSERT INTO order_status_history (order_id, status, changed_by, change_type, notes)
+         VALUES ($1, 'delivered', $2, 'manual', 'Entrega confirmada por el cliente')`,
+        [id, userId]
+      );
+    } catch (e) {
+      console.warn('⚠️ No se pudo registrar en historial:', e.message);
+    }
+
+    console.log(`✅ Entrega confirmada para orden ${id}`);
+
+    res.json({
+      message: 'Entrega confirmada exitosamente',
+      order: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Error al confirmar entrega:', error);
+    res.status(500).json({ error: 'Error al confirmar entrega' });
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
   getOrderById,
   updateOrderStatus,
-  cancelOrder
+  cancelOrder,
+  confirmDelivery
 };

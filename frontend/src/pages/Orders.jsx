@@ -128,6 +128,24 @@ function Orders() {
             ✅ Confirmados
           </button>
           <button
+            onClick={() => setFilter('preparing')}
+            className={`filter-chip ${filter === 'preparing' ? 'active' : ''} hover-grow`}
+          >
+            👨‍🍳 Preparando
+          </button>
+          <button
+            onClick={() => setFilter('delivering')}
+            className={`filter-chip ${filter === 'delivering' ? 'active' : ''} hover-grow`}
+          >
+            🚚 En Camino
+          </button>
+          <button
+            onClick={() => setFilter('delivered')}
+            className={`filter-chip ${filter === 'delivered' ? 'active' : ''} hover-grow`}
+          >
+            🎉 Entregados
+          </button>
+          <button
             onClick={() => setFilter('cancelled')}
             className={`filter-chip ${filter === 'cancelled' ? 'active' : ''} hover-grow`}
           >

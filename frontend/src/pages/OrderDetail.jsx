@@ -32,8 +32,7 @@ function OrderDetail() {
       pending: { text: 'Pendiente', emoji: '⏳', color: '#fbbf24' },
       confirmed: { text: 'Confirmado', emoji: '✅', color: '#10b981' },
       preparing: { text: 'En preparación', emoji: '👨‍🍳', color: '#3b82f6' },
-      ready: { text: 'Listo', emoji: '🔔', color: '#8b5cf6' },
-      on_delivery: { text: 'En camino', emoji: '🚚', color: '#ec4899' },
+      delivering: { text: 'En camino', emoji: '🚚', color: '#ec4899' },
       delivered: { text: 'Entregado', emoji: '🎉', color: '#22c55e' },
       cancelled: { text: 'Cancelado', emoji: '❌', color: '#ef4444' }
     };
@@ -45,8 +44,7 @@ function OrderDetail() {
       pending: 'badge-pending',
       confirmed: 'badge-confirmed',
       preparing: 'badge-preparing',
-      ready: 'badge-ready',
-      on_delivery: 'badge-delivering',
+      delivering: 'badge-delivering',
       delivered: 'badge-delivered',
       cancelled: 'badge-cancelled'
     };
@@ -77,6 +75,22 @@ function OrderDetail() {
     } catch (err) {
       console.error('Error al cancelar pedido:', err);
       setError(err.response?.data?.error || 'No se pudo cancelar el pedido');
+    }
+  };
+
+  const handleConfirmDelivery = async () => {
+    if (!window.confirm('¿Confirmas que recibiste tu pedido?')) {
+      return;
+    }
+
+    try {
+      await orderService.confirmDelivery(id);
+      // Recargar orden para ver el estado actualizado
+      const data = await orderService.getOrderById(id);
+      setOrder(data.order);
+    } catch (err) {
+      console.error('Error al confirmar entrega:', err);
+      setError(err.response?.data?.error || 'No se pudo confirmar la entrega');
     }
   };
 
@@ -288,26 +302,26 @@ function OrderDetail() {
               </h2>
               <div className="info-content">
                 <div className="order-timeline">
-                  <div className={`timeline-step ${['pending', 'confirmed', 'preparing', 'ready', 'on_delivery', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
+                  <div className={`timeline-step ${['pending', 'confirmed', 'preparing', 'delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
                     <div className="timeline-dot"></div>
                     <div className="timeline-content">
                       <p className="timeline-title">Pedido Recibido</p>
                       <p className="timeline-date">{formatDate(order.created_at)}</p>
                     </div>
                   </div>
-                  <div className={`timeline-step ${['confirmed', 'preparing', 'ready', 'on_delivery', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
+                  <div className={`timeline-step ${['confirmed', 'preparing', 'delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
                     <div className="timeline-dot"></div>
                     <div className="timeline-content">
                       <p className="timeline-title">Pedido Confirmado</p>
                     </div>
                   </div>
-                  <div className={`timeline-step ${['preparing', 'ready', 'on_delivery', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
+                  <div className={`timeline-step ${['preparing', 'delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
                     <div className="timeline-dot"></div>
                     <div className="timeline-content">
                       <p className="timeline-title">En Preparación</p>
                     </div>
                   </div>
-                  <div className={`timeline-step ${['on_delivery', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
+                  <div className={`timeline-step ${['delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
                     <div className="timeline-dot"></div>
                     <div className="timeline-content">
                       <p className="timeline-title">En Camino</p>
@@ -323,7 +337,7 @@ function OrderDetail() {
               </div>
             </div>
 
-            {/* Cancel Button */}
+            {/* Action Buttons */}
             {(order.status === 'pending' || order.status === 'confirmed') && (
               <div className="cancel-order-section animate-fade-in-up animate-delay-6">
                 <button
@@ -332,6 +346,21 @@ function OrderDetail() {
                 >
                   ❌ Cancelar Pedido
                 </button>
+              </div>
+            )}
+
+            {/* Confirm Delivery Button */}
+            {order.status === 'delivering' && (
+              <div className="confirm-delivery-section animate-fade-in-up animate-delay-6">
+                <button
+                  onClick={handleConfirmDelivery}
+                  className="btn btn-success btn-block hover-lift"
+                >
+                  ✅ Confirmar Entrega
+                </button>
+                <p className="text-sm text-muted mt-2" style={{ textAlign: 'center' }}>
+                  Haz clic cuando hayas recibido tu pedido
+                </p>
               </div>
             )}
           </div>
