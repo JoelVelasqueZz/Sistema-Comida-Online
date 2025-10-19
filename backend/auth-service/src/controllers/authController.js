@@ -1,6 +1,39 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/database');
+const crypto = require('crypto');
+
+// ============================================
+// FUNCIONES AUXILIARES PARA TOKENS
+// ============================================
+const generateAccessToken = (user) => {
+  return jwt.sign(
+    {
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '15m' } // Access token expira en 15 minutos
+  );
+};
+
+const generateRefreshToken = () => {
+  return crypto.randomBytes(64).toString('hex');
+};
+
+const saveRefreshToken = async (userId, refreshToken, deviceInfo, ipAddress) => {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7); // Refresh token expira en 7 días
+
+  await pool.query(
+    `INSERT INTO refresh_tokens (user_id, token, expires_at, device_info, ip_address)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [userId, refreshToken, expiresAt, deviceInfo, ipAddress]
+  );
+
+  return expiresAt;
+};
 
 // ============================================
 // REGISTRO DE USUARIO
@@ -55,16 +88,16 @@ const register = async (req, res) => {
 
     const user = result.rows[0];
 
-    // Generar token JWT
-    const token = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email, 
-        role: user.role 
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-    );
+    // Generar access token y refresh token
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken();
+
+    // Obtener info del dispositivo y IP
+    const deviceInfo = req.headers['user-agent'] || 'Unknown';
+    const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+
+    // Guardar refresh token en BD
+    await saveRefreshToken(user.id, refreshToken, deviceInfo, ipAddress);
 
     res.status(201).json({
       message: 'Usuario registrado exitosamente',
@@ -75,7 +108,8 @@ const register = async (req, res) => {
         phone: user.phone,
         role: user.role
       },
-      token
+      accessToken,
+      refreshToken
     });
 
   } catch (error) {
@@ -116,21 +150,27 @@ const login = async (req, res) => {
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
 
     if (!isValidPassword) {
-      return res.status(401).json({ 
-        error: 'Email o contraseña incorrectos' 
+      return res.status(401).json({
+        error: 'Email o contraseña incorrectos'
       });
     }
 
-    // Generar token JWT
-    const token = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email, 
-        role: user.role 
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+    // Actualizar último login
+    await pool.query(
+      'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
+      [user.id]
     );
+
+    // Generar access token y refresh token
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken();
+
+    // Obtener info del dispositivo y IP
+    const deviceInfo = req.headers['user-agent'] || 'Unknown';
+    const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
+
+    // Guardar refresh token en BD
+    await saveRefreshToken(user.id, refreshToken, deviceInfo, ipAddress);
 
     res.json({
       message: 'Login exitoso',
@@ -141,7 +181,8 @@ const login = async (req, res) => {
         phone: user.phone,
         role: user.role
       },
-      token
+      accessToken,
+      refreshToken
     });
 
   } catch (error) {
@@ -246,10 +287,166 @@ const verifyUser = async (req, res) => {
   }
 };
 
+// ============================================
+// REFRESH TOKEN - Obtener nuevo access token
+// ============================================
+const refreshAccessToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ error: 'Refresh token es requerido' });
+    }
+
+    // Buscar refresh token en BD
+    const result = await pool.query(
+      `SELECT rt.*, u.id, u.email, u.role, u.name, u.phone
+       FROM refresh_tokens rt
+       JOIN users u ON rt.user_id = u.id
+       WHERE rt.token = $1 AND rt.is_revoked = false AND u.is_active = true`,
+      [refreshToken]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Refresh token inválido o revocado' });
+    }
+
+    const tokenData = result.rows[0];
+
+    // Verificar si el token expiró
+    if (new Date(tokenData.expires_at) < new Date()) {
+      return res.status(401).json({ error: 'Refresh token expirado' });
+    }
+
+    // Generar nuevo access token
+    const user = {
+      id: tokenData.id,
+      email: tokenData.email,
+      role: tokenData.role,
+      name: tokenData.name,
+      phone: tokenData.phone
+    };
+
+    const newAccessToken = generateAccessToken(user);
+
+    res.json({
+      message: 'Token renovado exitosamente',
+      accessToken: newAccessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        role: user.role
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al renovar token:', error);
+    res.status(500).json({ error: 'Error al renovar token' });
+  }
+};
+
+// ============================================
+// LOGOUT - Revocar refresh token
+// ============================================
+const logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ error: 'Refresh token es requerido' });
+    }
+
+    // Revocar el refresh token
+    await pool.query(
+      'UPDATE refresh_tokens SET is_revoked = true WHERE token = $1',
+      [refreshToken]
+    );
+
+    res.json({ message: 'Logout exitoso' });
+
+  } catch (error) {
+    console.error('Error en logout:', error);
+    res.status(500).json({ error: 'Error al cerrar sesión' });
+  }
+};
+
+// ============================================
+// LOGOUT ALL - Revocar todos los tokens del usuario
+// ============================================
+const logoutAll = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Revocar todos los refresh tokens del usuario
+    await pool.query(
+      'UPDATE refresh_tokens SET is_revoked = true WHERE user_id = $1',
+      [userId]
+    );
+
+    res.json({ message: 'Todas las sesiones cerradas exitosamente' });
+
+  } catch (error) {
+    console.error('Error en logout all:', error);
+    res.status(500).json({ error: 'Error al cerrar todas las sesiones' });
+  }
+};
+
+// ============================================
+// ADMIN - Obtener todos los usuarios
+// ============================================
+const getAllUsers = async (req, res) => {
+  try {
+    console.log('👥 Obteniendo todos los usuarios...');
+
+    const result = await pool.query(
+      `SELECT id, email, name, phone, role, is_active, created_at, last_login
+       FROM users
+       ORDER BY created_at DESC`
+    );
+
+    res.json({
+      success: true,
+      users: result.rows,
+      total: result.rows.length
+    });
+
+  } catch (error) {
+    console.error('Error al obtener usuarios:', error);
+    res.status(500).json({ error: 'Error al obtener usuarios' });
+  }
+};
+
+// ============================================
+// ADMIN - Obtener conteo de usuarios
+// ============================================
+const getUsersCount = async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT COUNT(*) as count FROM users WHERE is_active = true'
+    );
+
+    res.json({
+      success: true,
+      count: parseInt(result.rows[0].count)
+    });
+
+  } catch (error) {
+    console.error('Error al contar usuarios:', error);
+    res.status(500).json({ error: 'Error al contar usuarios' });
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
   updateProfile,
-  verifyUser
+  verifyUser,
+  refreshAccessToken,
+  logout,
+  logoutAll,
+  getAllUsers,
+  getUsersCount
 };

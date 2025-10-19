@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const orderRoutes = require('./routes/orderRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const pool = require('./config/database');
 
 const app = express();
@@ -36,6 +37,7 @@ app.get('/health', async (req, res) => {
 });
 
 app.use('/api/orders', orderRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });

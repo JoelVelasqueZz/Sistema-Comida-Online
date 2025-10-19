@@ -135,9 +135,9 @@ const createOrder = async (req, res) => {
       if (item.extras.length > 0) {
         for (const extra of item.extras) {
           await client.query(
-            `INSERT INTO order_item_extras (order_item_id, product_extra_id, price)
-             VALUES ($1, $2, $3)`,
-            [orderItemId, extra.id, extra.price]
+            `INSERT INTO order_item_extras (order_item_id, extra_id, name, price)
+            VALUES ($1, $2, $3, $4)`,
+            [orderItemId, extra.id, extra.name, extra.price]
           );
         }
       }
@@ -179,12 +179,14 @@ const getUserOrders = async (req, res) => {
     const userId = req.user.userId;
     const { status } = req.query;
 
+    console.log('📋 getUserOrders - Usuario:', userId);
+    console.log('📋 getUserOrders - Filtro status:', status);
+
     let query = `
       SELECT o.id, o.status, o.subtotal, o.delivery_fee, o.tax, o.total,
              o.payment_method, o.created_at, o.estimated_delivery,
-             a.street, a.city
+             o.street, o.city, o.postal_code, o.reference
       FROM orders o
-      LEFT JOIN addresses a ON o.address_id = a.id
       WHERE o.user_id = $1
     `;
 
@@ -193,11 +195,22 @@ const getUserOrders = async (req, res) => {
     if (status) {
       query += ' AND o.status = $2';
       values.push(status);
+      console.log('   Aplicando filtro de estado:', status);
+    } else {
+      console.log('   Sin filtro de estado (todos)');
     }
 
     query += ' ORDER BY o.created_at DESC';
 
+    console.log('   Query SQL:', query);
+    console.log('   Valores:', values);
+
     const result = await pool.query(query, values);
+
+    console.log(`✅ Encontradas ${result.rows.length} órdenes`);
+    if (result.rows.length > 0) {
+      console.log('   Estados únicos:', [...new Set(result.rows.map(r => r.status))]);
+    }
 
     res.json({
       orders: result.rows,
@@ -205,7 +218,7 @@ const getUserOrders = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error al obtener órdenes:', error);
+    console.error('❌ Error al obtener órdenes:', error);
     res.status(500).json({ error: 'Error al obtener órdenes' });
   }
 };
@@ -220,9 +233,8 @@ const getOrderById = async (req, res) => {
 
     // Obtener orden
     const orderResult = await pool.query(
-      `SELECT o.*, a.street, a.city, a.reference
+      `SELECT o.*
        FROM orders o
-       LEFT JOIN addresses a ON o.address_id = a.id
        WHERE o.id = $1 AND o.user_id = $2`,
       [id, userId]
     );

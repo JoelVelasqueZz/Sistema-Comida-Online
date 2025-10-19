@@ -58,14 +58,20 @@ const authenticateToken = (req, res, next) => {
 
 // Aplicar middleware solo a rutas protegidas
 app.use((req, res, next) => {
-  const publicRoutes = ['/health', '/api/auth/login', '/api/auth/register'];
+  const publicRoutes = [
+    '/health',
+    '/api/auth/login',
+    '/api/auth/register',
+    '/api/auth/refresh-token',
+    '/api/auth/logout'
+  ];
   const isMenuRoute = req.path.startsWith('/api/menu');
-  
+
   // Rutas públicas y de menú no requieren autenticación
   if (publicRoutes.includes(req.path) || isMenuRoute) {
     return next();
   }
-  
+
   // Rutas protegidas requieren token
   authenticateToken(req, res, next);
 });
@@ -82,21 +88,28 @@ app.get('/health', (req, res) => {
 // Función helper para hacer proxy
 const proxyRequest = async (req, res, serviceUrl) => {
   try {
-    console.log(`📤 Enviando request a: ${serviceUrl}${req.path}`);
+    // Construir la ruta completa (baseUrl + path)
+    // req.baseUrl tiene el prefijo del router (ej: /api/orders)
+    // req.path tiene el resto de la ruta (ej: / o /:id)
+    const fullPath = req.baseUrl + req.path;
+    const targetUrl = `${serviceUrl}${fullPath}`;
+
+    console.log(`📤 Enviando request a: ${targetUrl}`);
     console.log(`   Method: ${req.method}`);
+    console.log(`   Query params:`, req.query);
     console.log(`   Body:`, req.body);
     console.log(`   Headers:`, req.headers.authorization ? 'Authorization present' : 'No auth');
 
     const response = await axios({
       method: req.method,
-      url: `${serviceUrl}${req.path}`,
+      url: targetUrl,
       data: req.body,
       headers: {
         'Content-Type': 'application/json',
         ...(req.headers.authorization && { 'Authorization': req.headers.authorization }),
         ...(req.headers['x-user-id'] && { 'x-user-id': req.headers['x-user-id'] }),
         ...(req.headers['x-user-role'] && { 'x-user-role': req.headers['x-user-role'] })
-      }, // 👈 AQUÍ ESTABA EL ERROR - FALTABA LA COMA
+      },
       params: req.query
     });
 
@@ -111,9 +124,9 @@ const proxyRequest = async (req, res, serviceUrl) => {
       res.status(error.response.status).json(error.response.data);
     } else {
       console.error(`   No response from service`);
-      res.status(503).json({ 
+      res.status(503).json({
         error: 'Servicio no disponible',
-        details: error.message 
+        details: error.message
       });
     }
   }
@@ -132,6 +145,21 @@ app.post('/api/auth/login', (req, res) => {
   proxyRequest(req, res, SERVICES.auth);
 });
 
+app.post('/api/auth/refresh-token', (req, res) => {
+  console.log('🔵 Refresh token request recibida');
+  proxyRequest(req, res, SERVICES.auth);
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  console.log('🔵 Logout request recibida');
+  proxyRequest(req, res, SERVICES.auth);
+});
+
+app.post('/api/auth/logout-all', (req, res) => {
+  console.log('🔵 Logout all request recibida');
+  proxyRequest(req, res, SERVICES.auth);
+});
+
 app.get('/api/auth/profile', (req, res) => {
   proxyRequest(req, res, SERVICES.auth);
 });
@@ -141,53 +169,48 @@ app.patch('/api/auth/profile', (req, res) => {
 });
 
 // ==========================================
+// RUTAS DE ADMIN (Proxy a Order Service)
+// IMPORTANTE: Definir ANTES de las rutas de orders para evitar conflictos
+// ==========================================
+// Usar un router para capturar todas las subrutas de /api/admin
+const adminRouter = express.Router();
+
+// Capturar todas las peticiones al router admin
+adminRouter.all('*', (req, res) => {
+  console.log('🔵 Admin request recibida:', req.method, req.originalUrl);
+  // Construir la URL completa manteniendo el path original
+  proxyRequest(req, res, SERVICES.orders);
+});
+
+// Montar el router en /api/admin
+app.use('/api/admin', adminRouter);
+
+// ==========================================
 // RUTAS DE MENU SERVICE
 // ==========================================
-app.get('/api/menu/*', (req, res) => {
+const menuRouter = express.Router();
+menuRouter.all('*', (req, res) => {
   proxyRequest(req, res, SERVICES.menu);
 });
-
-app.post('/api/menu/*', (req, res) => {
-  proxyRequest(req, res, SERVICES.menu);
-});
-
-app.patch('/api/menu/*', (req, res) => {
-  proxyRequest(req, res, SERVICES.menu);
-});
-
-app.delete('/api/menu/*', (req, res) => {
-  proxyRequest(req, res, SERVICES.menu);
-});
+app.use('/api/menu', menuRouter);
 
 // ==========================================
 // RUTAS DE ORDER SERVICE
 // ==========================================
-app.get('/api/orders*', (req, res) => {
+const ordersRouter = express.Router();
+ordersRouter.all('*', (req, res) => {
   proxyRequest(req, res, SERVICES.orders);
 });
-
-app.post('/api/orders*', (req, res) => {
-  proxyRequest(req, res, SERVICES.orders);
-});
-
-app.patch('/api/orders*', (req, res) => {
-  proxyRequest(req, res, SERVICES.orders);
-});
-
-app.delete('/api/orders*', (req, res) => {
-  proxyRequest(req, res, SERVICES.orders);
-});
+app.use('/api/orders', ordersRouter);
 
 // ==========================================
 // RUTAS DE PAYMENT SERVICE
 // ==========================================
-app.get('/api/payments*', (req, res) => {
+const paymentsRouter = express.Router();
+paymentsRouter.all('*', (req, res) => {
   proxyRequest(req, res, SERVICES.payments);
 });
-
-app.post('/api/payments*', (req, res) => {
-  proxyRequest(req, res, SERVICES.payments);
-});
+app.use('/api/payments', paymentsRouter);
 
 // 404 Handler
 app.use((req, res) => {

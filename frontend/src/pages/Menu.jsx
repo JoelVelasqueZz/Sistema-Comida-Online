@@ -23,7 +23,14 @@ function Menu() {
   const loadCategories = async () => {
     try {
       const data = await menuService.getCategories();
-      setCategories(data.categories);
+      
+      // Filtrar categorías duplicadas por nombre
+      const uniqueCategories = data.categories.filter(
+        (category, index, self) =>
+          index === self.findIndex((c) => c.name === category.name)
+      );
+      
+      setCategories(uniqueCategories);
     } catch (err) {
       console.error('Error al cargar categorías:', err);
     }
@@ -32,16 +39,20 @@ function Menu() {
   const loadProducts = async (categoryId = null) => {
     try {
       setLoading(true);
+      setError(''); // Limpiar errores previos
       let data;
       if (categoryId) {
+        console.log('🏷️ Cargando productos de categoría:', categoryId);
         data = await menuService.getProductsByCategory(categoryId);
       } else {
-        data = await menuService.getProducts({ available: 'true' });
+        console.log('📦 Cargando todos los productos');
+        data = await menuService.getProducts();
       }
-      setProducts(data.products);
+      console.log('✅ Productos recibidos:', data.products?.length || 0);
+      setProducts(data.products || []);
     } catch (err) {
       setError('Error al cargar productos');
-      console.error(err);
+      console.error('❌ Error al cargar productos:', err);
     } finally {
       setLoading(false);
     }

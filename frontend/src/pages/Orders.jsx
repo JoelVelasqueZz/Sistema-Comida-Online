@@ -13,12 +13,23 @@ function Orders() {
     const loadOrders = async () => {
       try {
         setLoading(true);
+        setError(''); // Limpiar error previo
         const statusFilter = filter === 'all' ? null : filter;
+
+        console.log('📋 [Orders.jsx] Filtro activo:', filter);
+        console.log('📋 [Orders.jsx] Enviando a API:', statusFilter);
+
         const data = await orderService.getUserOrders(statusFilter);
-        setOrders(data.orders);
+
+        console.log('📦 [Orders.jsx] Datos recibidos:', data);
+        console.log('✅ [Orders.jsx] Total órdenes:', data.orders?.length || 0);
+
+        setOrders(data.orders || []);
       } catch (err) {
-        console.error('Error al cargar órdenes:', err);
+        console.error('❌ [Orders.jsx] Error al cargar órdenes:', err);
+        console.error('Error details:', err.response?.data);
         setError('Error al cargar tus pedidos');
+        setOrders([]);
       } finally {
         setLoading(false);
       }
@@ -32,8 +43,7 @@ function Orders() {
       pending: 'badge-pending',
       confirmed: 'badge-confirmed',
       preparing: 'badge-preparing',
-      ready: 'badge-success',
-      on_delivery: 'badge-delivering',
+      delivering: 'badge-delivering',
       delivered: 'badge-delivered',
       cancelled: 'badge-cancelled'
     };
@@ -45,8 +55,7 @@ function Orders() {
       pending: { text: 'Pendiente', emoji: '⏳' },
       confirmed: { text: 'Confirmado', emoji: '✅' },
       preparing: { text: 'En preparación', emoji: '👨‍🍳' },
-      ready: { text: 'Listo', emoji: '✔️' },
-      on_delivery: { text: 'En camino', emoji: '🚚' },
+      delivering: { text: 'En camino', emoji: '🚚' },
       delivered: { text: 'Entregado', emoji: '🎉' },
       cancelled: { text: 'Cancelado', emoji: '❌' }
     };
@@ -71,8 +80,6 @@ function Orders() {
 
     try {
       await orderService.cancelOrder(orderId);
-
-      // Recargar órdenes
       const statusFilter = filter === 'all' ? null : filter;
       const data = await orderService.getUserOrders(statusFilter);
       setOrders(data.orders);
@@ -106,7 +113,7 @@ function Orders() {
             onClick={() => setFilter('all')}
             className={`filter-chip ${filter === 'all' ? 'active' : ''} hover-grow`}
           >
-            Todos
+            📋 Todos
           </button>
           <button
             onClick={() => setFilter('pending')}
@@ -115,16 +122,16 @@ function Orders() {
             ⏳ Pendientes
           </button>
           <button
-            onClick={() => setFilter('on_delivery')}
-            className={`filter-chip ${filter === 'on_delivery' ? 'active' : ''} hover-grow`}
+            onClick={() => setFilter('confirmed')}
+            className={`filter-chip ${filter === 'confirmed' ? 'active' : ''} hover-grow`}
           >
-            🚚 En camino
+            ✅ Confirmados
           </button>
           <button
-            onClick={() => setFilter('delivered')}
-            className={`filter-chip ${filter === 'delivered' ? 'active' : ''} hover-grow`}
+            onClick={() => setFilter('cancelled')}
+            className={`filter-chip ${filter === 'cancelled' ? 'active' : ''} hover-grow`}
           >
-            🎉 Entregados
+            ❌ Cancelados
           </button>
         </div>
 
@@ -183,10 +190,13 @@ function Orders() {
                       <span className="detail-icon">📍</span>
                       <div className="detail-content">
                         <span className="detail-label">Dirección:</span>
-                        <span className="detail-value">{order.street}, {order.city}</span>
+                        <span className="detail-value">
+                          {order.street && order.city
+                            ? `${order.street}, ${order.city}${order.postal_code ? ` (${order.postal_code})` : ''}${order.reference ? ` - ${order.reference}` : ''}`
+                            : 'No especificada'}
+                        </span>
                       </div>
                     </div>
-
                     <div className="order-detail-row">
                       <span className="detail-icon">
                         {order.payment_method === 'cash' ? '💵' :
@@ -210,7 +220,6 @@ function Orders() {
                         ${parseFloat(order.total).toFixed(2)}
                       </span>
                     </div>
-
                     <div className="order-actions">
                       <Link to={`/orders/${order.id}`}>
                         <button className="btn btn-primary btn-sm hover-lift">

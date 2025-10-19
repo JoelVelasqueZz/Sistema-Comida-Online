@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './Navbar.css';
 
 function Navbar() {
@@ -11,6 +11,8 @@ function Navbar() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   // Detectar scroll para agregar sombra al navbar
   useEffect(() => {
@@ -25,12 +27,30 @@ function Navbar() {
   // Cerrar menú móvil al cambiar de ruta
   useEffect(() => {
     setMobileMenuOpen(false);
+    setProfileDropdownOpen(false);
   }, [location]);
 
-  const handleLogout = () => {
-    logout();
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
     setMobileMenuOpen(false);
+    setProfileDropdownOpen(false);
+  };
+
+  const toggleProfileDropdown = () => {
+    setProfileDropdownOpen(!profileDropdownOpen);
   };
 
   const toggleMobileMenu = () => {
@@ -85,14 +105,6 @@ function Navbar() {
                   📦 Mis Pedidos
                 </Link>
 
-                <Link
-                  to="/profile"
-                  className={`navbar-link hover-underline ${isActive('/profile')}`}
-                  onClick={closeMobileMenu}
-                >
-                  👤 Perfil
-                </Link>
-
                 {/* Carrito con badge animado */}
                 <Link
                   to="/cart"
@@ -105,13 +117,73 @@ function Navbar() {
                   )}
                 </Link>
 
-                {/* Botón logout con efecto hover */}
-                <button
-                  onClick={handleLogout}
-                  className="btn btn-outline-secondary btn-sm hover-shrink"
-                >
-                  🚪 Salir
-                </button>
+                {/* Dropdown de Perfil */}
+                <div className="profile-dropdown-container" ref={dropdownRef}>
+                  <button
+                    className="profile-dropdown-trigger"
+                    onClick={toggleProfileDropdown}
+                  >
+                    👤 {user.name || 'Perfil'}
+                    <span className={`dropdown-arrow ${profileDropdownOpen ? 'open' : ''}`}>
+                      ▼
+                    </span>
+                  </button>
+
+                  {profileDropdownOpen && (
+                    <div className="profile-dropdown-menu animate-fade-in">
+                      <div className="dropdown-header">
+                        <div className="dropdown-user-info">
+                          <p className="dropdown-user-name">{user.name}</p>
+                          <p className="dropdown-user-email">{user.email}</p>
+                          {user.role && (
+                            <span className={`dropdown-user-role role-${user.role}`}>
+                              {user.role === 'admin' ? '👑 Administrador' :
+                               user.role === 'delivery' ? '🚚 Repartidor' : '👤 Cliente'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="dropdown-divider"></div>
+
+                      <Link
+                        to="/profile"
+                        className="dropdown-item"
+                        onClick={() => {
+                          setProfileDropdownOpen(false);
+                          closeMobileMenu();
+                        }}
+                      >
+                        <span className="dropdown-item-icon">👤</span>
+                        Ver Perfil
+                      </Link>
+
+                      {user.role === 'admin' && (
+                        <Link
+                          to="/admin/dashboard"
+                          className="dropdown-item dropdown-item-admin"
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            closeMobileMenu();
+                          }}
+                        >
+                          <span className="dropdown-item-icon">📊</span>
+                          Dashboard Admin
+                        </Link>
+                      )}
+
+                      <div className="dropdown-divider"></div>
+
+                      <button
+                        onClick={handleLogout}
+                        className="dropdown-item dropdown-item-danger"
+                      >
+                        <span className="dropdown-item-icon">🚪</span>
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>
