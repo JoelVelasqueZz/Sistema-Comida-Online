@@ -253,27 +253,29 @@ function AdminOrders() {
                 </thead>
                 <tbody>
                   {orders.map(order => {
-                    // Validaciones defensivas
-                    if (!order || !order.id) {
-                      console.warn('Orden inválida encontrada:', order);
-                      return null;
-                    }
+                    try {
+                      // Validaciones defensivas
+                      if (!order || !order.id) {
+                        console.warn('Orden inválida encontrada:', order);
+                        return null;
+                      }
 
-                    const statusInfo = getStatusInfo(order.status);
-                    const orderId = String(order.id).substring(0, 8).toUpperCase();
+                      const statusInfo = getStatusInfo(order.status);
+                      const orderId = String(order.id).substring(0, 8).toUpperCase();
+                      const orderTotal = parseFloat(order.total || 0).toFixed(2);
 
-                    return (
-                      <tr key={order.id} className="order-row">
-                        <td className="order-id">#{orderId}</td>
-                        <td>
-                          <div className="customer-info">
-                            <div className="customer-name">{order.user_name || 'Desconocido'}</div>
-                            <div className="customer-email">{order.user_email || 'N/A'}</div>
-                          </div>
-                        </td>
-                        <td className="order-date">{formatDate(order.created_at)}</td>
-                        <td className="order-items">{order.item_count || 0} item(s)</td>
-                        <td className="order-total">${(order.total || 0).toFixed(2)}</td>
+                      return (
+                        <tr key={order.id} className="order-row">
+                          <td className="order-id">#{orderId}</td>
+                          <td>
+                            <div className="customer-info">
+                              <div className="customer-name">{order.user_name || 'Desconocido'}</div>
+                              <div className="customer-email">{order.user_email || 'N/A'}</div>
+                            </div>
+                          </td>
+                          <td className="order-date">{formatDate(order.created_at)}</td>
+                          <td className="order-items">{order.item_count || 0} item(s)</td>
+                          <td className="order-total">${orderTotal}</td>
                         <td className="order-address">
                           {order.street && order.city ? (
                             <div className="address-info">
@@ -308,7 +310,11 @@ function AdminOrders() {
                           </div>
                         </td>
                       </tr>
-                    );
+                      );
+                    } catch (renderError) {
+                      console.error('❌ Error renderizando orden:', order, renderError);
+                      return null;
+                    }
                   })}
                 </tbody>
               </table>
