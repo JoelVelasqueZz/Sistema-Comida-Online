@@ -16,6 +16,7 @@ import OrderDetail from './pages/OrderDetail';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminOrders from './pages/AdminOrders';
+import MenuManagement from './pages/admin/MenuManagement';
 
 // Importar componente de protección de rutas admin
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
@@ -134,6 +135,14 @@ function AppRoutes() {
           element={
             <ProtectedAdminRoute>
               <AdminOrders />
+            </ProtectedAdminRoute>
+          }
+        />
+        <Route
+          path="/admin/menu"
+          element={
+            <ProtectedAdminRoute>
+              <MenuManagement />
             </ProtectedAdminRoute>
           }
         />

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(psql -U postgres -d SistemaComida -c \"\\d categories\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
