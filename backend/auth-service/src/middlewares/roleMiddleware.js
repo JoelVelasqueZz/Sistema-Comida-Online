@@ -12,10 +12,6 @@
  * @example
  * // Permitir solo admins
  * router.get('/admin/users', authMiddleware, authorize('admin'), getUsers);
- *
- * @example
- * // Permitir admins y delivery
- * router.patch('/orders/:id', authMiddleware, authorize('admin', 'delivery'), updateOrder);
  */
 const authorize = (...allowedRoles) => {
   return (req, res, next) => {
@@ -52,22 +48,8 @@ const isAdmin = authorize('admin');
  */
 const isCustomer = authorize('customer');
 
-/**
- * Middleware para verificar que el usuario sea delivery
- * Atajo para authorize('delivery')
- */
-const isDelivery = authorize('delivery');
-
-/**
- * Middleware para verificar que el usuario sea admin o delivery
- * Útil para rutas de gestión de pedidos
- */
-const isAdminOrDelivery = authorize('admin', 'delivery');
-
 module.exports = {
   authorize,
   isAdmin,
-  isCustomer,
-  isDelivery,
-  isAdminOrDelivery
+  isCustomer
 };

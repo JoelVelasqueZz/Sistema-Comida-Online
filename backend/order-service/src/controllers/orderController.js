@@ -386,11 +386,51 @@ const confirmDelivery = async (req, res) => {
   }
 };
 
+// ============================================
+// OBTENER ESTADÍSTICAS DE PEDIDOS DE UN USUARIO
+// ============================================
+const getUserOrderStats = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    console.log('📊 getUserOrderStats - Usuario:', userId);
+
+    // Obtener estadísticas generales
+    const statsResult = await pool.query(
+      `SELECT
+        COUNT(*) as total_orders,
+        COALESCE(SUM(total), 0) as total_spent,
+        COALESCE(AVG(total), 0) as average_order,
+        MAX(created_at) as last_order_date
+       FROM orders
+       WHERE user_id = $1 AND status != 'cancelled'`,
+      [userId]
+    );
+
+    const stats = statsResult.rows[0];
+
+    res.json({
+      success: true,
+      stats: {
+        totalOrders: parseInt(stats.total_orders),
+        totalSpent: parseFloat(stats.total_spent),
+        averageOrder: parseFloat(stats.average_order),
+        lastOrderDate: stats.last_order_date
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al obtener estadísticas del usuario:', error);
+    res.status(500).json({ error: 'Error al obtener estadísticas' });
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
   getOrderById,
   updateOrderStatus,
   cancelOrder,
-  confirmDelivery
+  confirmDelivery,
+  getUserOrderStats
 };

@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/userRoutes');
 const pool = require('./config/database');
 
 const app = express();
@@ -48,6 +49,7 @@ app.get('/health', async (req, res) => {
 // RUTAS
 // ============================================
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // ============================================
 // MANEJO DE ERRORES

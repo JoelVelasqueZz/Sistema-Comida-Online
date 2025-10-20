@@ -3,7 +3,18 @@ const router = express.Router();
 const orderController = require('../controllers/orderController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-// Todas las rutas requieren autenticación
+// ============================================
+// RUTAS SIN AUTENTICACIÓN (Para llamadas internas entre servicios)
+// ============================================
+
+// Obtener estadísticas de pedidos de un usuario (llamada desde auth-service)
+router.get('/user/:userId/stats', orderController.getUserOrderStats);
+
+// ============================================
+// RUTAS CON AUTENTICACIÓN
+// ============================================
+
+// Todas las rutas siguientes requieren autenticación
 router.use(authMiddleware);
 
 // Crear orden

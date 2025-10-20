@@ -169,6 +169,16 @@ app.patch('/api/auth/profile', (req, res) => {
 });
 
 // ==========================================
+// RUTAS DE USERS (Proxy a Auth Service)
+// ==========================================
+const usersRouter = express.Router();
+usersRouter.all('*', (req, res) => {
+  console.log('🔵 Users request recibida:', req.method, req.originalUrl);
+  proxyRequest(req, res, SERVICES.auth);
+});
+app.use('/api/users', usersRouter);
+
+// ==========================================
 // RUTAS DE ADMIN (Proxy a Order Service)
 // IMPORTANTE: Definir ANTES de las rutas de orders para evitar conflictos
 // ==========================================

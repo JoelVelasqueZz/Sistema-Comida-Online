@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(psql -U postgres -d SistemaComida -c \"\\d categories\")"
+      "Bash(psql -U postgres -d SistemaComida -c \"\\d categories\")",
+      "Bash(npm start)"
     ],
     "deny": [],
     "ask": []
