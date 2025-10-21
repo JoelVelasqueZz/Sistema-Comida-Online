@@ -196,6 +196,16 @@ adminRouter.all('*', (req, res) => {
 app.use('/api/admin', adminRouter);
 
 // ==========================================
+// RUTAS DE REPORTS (Proxy a Order Service)
+// ==========================================
+const reportsRouter = express.Router();
+reportsRouter.all('*', (req, res) => {
+  console.log('🔵 Reports request recibida:', req.method, req.originalUrl);
+  proxyRequest(req, res, SERVICES.orders);
+});
+app.use('/api/reports', reportsRouter);
+
+// ==========================================
 // RUTAS DE MENU SERVICE
 // ==========================================
 const menuRouter = express.Router();
