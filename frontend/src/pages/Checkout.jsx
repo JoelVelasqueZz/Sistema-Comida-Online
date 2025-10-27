@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { orderService } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
+import CreditCardForm from '../components/checkout/CreditCardForm';
+import TransferForm from '../components/checkout/TransferForm';
 import './Checkout.css';
 
 function Checkout() {
@@ -19,6 +21,8 @@ function Checkout() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [pendingOrderData, setPendingOrderData] = useState(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -38,17 +42,42 @@ function Checkout() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setLoading(true);
 
-    try {
-      // 1. Preparar items para la orden
+    // Si es tarjeta o transferencia, mostrar el formulario de pago
+    if (formData.payment_method === 'card' || formData.payment_method === 'transfer') {
+      // Preparar datos para después
       const orderItems = cartItems.map(item => ({
         product_id: item.id,
         quantity: item.quantity,
         extras: item.extras?.map(e => e.id) || []
       }));
 
-      // 2. Crear la orden con dirección en el body
+      setPendingOrderData({
+        items: orderItems,
+        delivery_address: {
+          street: formData.street,
+          city: formData.city,
+          postal_code: formData.postal_code,
+          reference: formData.reference
+        },
+        payment_method: formData.payment_method,
+        special_instructions: formData.special_instructions
+      });
+
+      setShowPaymentForm(true);
+      return;
+    }
+
+    // Para efectivo, procesar directamente
+    setLoading(true);
+
+    try {
+      const orderItems = cartItems.map(item => ({
+        product_id: item.id,
+        quantity: item.quantity,
+        extras: item.extras?.map(e => e.id) || []
+      }));
+
       const orderData = {
         items: orderItems,
         delivery_address: {
@@ -66,7 +95,6 @@ function Checkout() {
       const orderResponse = await orderService.createOrder(orderData);
       console.log('✅ Orden creada:', orderResponse);
 
-      // 3. Procesar el pago
       const paymentData = {
         order_id: orderResponse.order.id,
         payment_method: formData.payment_method
@@ -74,13 +102,70 @@ function Checkout() {
 
       await paymentService.processPayment(paymentData);
 
-      // 4. Limpiar carrito y redirigir
       clearCart();
       navigate('/orders');
     } catch (err) {
       console.error('Error al procesar pedido:', err);
       console.error('Response:', err.response);
       setError(err.response?.data?.error || 'Error al procesar el pedido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCardPayment = async (paymentInfo) => {
+    setLoading(true);
+    try {
+      console.log('💳 Procesando pago con tarjeta:', paymentInfo);
+
+      const orderResponse = await orderService.createOrder(pendingOrderData);
+      console.log('✅ Orden creada:', orderResponse);
+
+      const paymentData = {
+        order_id: orderResponse.order.id,
+        payment_method: 'card',
+        transaction_id: paymentInfo.transactionId,
+        card_type: paymentInfo.cardType,
+        last_four: paymentInfo.lastFour
+      };
+
+      await paymentService.processPayment(paymentData);
+
+      clearCart();
+      navigate('/orders');
+    } catch (err) {
+      console.error('Error al procesar pago:', err);
+      setError(err.response?.data?.error || 'Error al procesar el pago');
+      setShowPaymentForm(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTransferPayment = async (transferInfo) => {
+    setLoading(true);
+    try {
+      console.log('📱 Procesando transferencia:', transferInfo);
+
+      const orderResponse = await orderService.createOrder(pendingOrderData);
+      console.log('✅ Orden creada:', orderResponse);
+
+      const paymentData = {
+        order_id: orderResponse.order.id,
+        payment_method: 'transfer',
+        transaction_id: transferInfo.transactionId,
+        reference: transferInfo.reference,
+        status: transferInfo.status
+      };
+
+      await paymentService.processPayment(paymentData);
+
+      clearCart();
+      navigate('/orders');
+    } catch (err) {
+      console.error('Error al procesar transferencia:', err);
+      setError(err.response?.data?.error || 'Error al procesar la transferencia');
+      setShowPaymentForm(false);
     } finally {
       setLoading(false);
     }
@@ -237,24 +322,44 @@ function Checkout() {
                     </div>
                   </label>
 
-                  <label className={`payment-option ${formData.payment_method === 'online' ? 'active' : ''}`}>
+                  <label className={`payment-option ${formData.payment_method === 'transfer' ? 'active' : ''}`}>
                     <input
                       type="radio"
                       name="payment_method"
-                      value="online"
-                      checked={formData.payment_method === 'online'}
+                      value="transfer"
+                      checked={formData.payment_method === 'transfer'}
                       onChange={handleChange}
                       className="radio"
                     />
                     <div className="payment-info">
-                      <span className="payment-icon">🌐</span>
+                      <span className="payment-icon">📱</span>
                       <div className="payment-details">
-                        <span className="payment-name">Pago en línea</span>
-                        <span className="payment-desc">Transferencia / QR</span>
+                        <span className="payment-name">Transferencia</span>
+                        <span className="payment-desc">Bancaria / QR</span>
                       </div>
                     </div>
                   </label>
                 </div>
+
+                {/* Mostrar formularios de pago según el método seleccionado */}
+                {showPaymentForm && formData.payment_method === 'card' && (
+                  <div className="payment-form-container">
+                    <CreditCardForm
+                      amount={totals.total}
+                      onPaymentSuccess={handleCardPayment}
+                    />
+                  </div>
+                )}
+
+                {showPaymentForm && formData.payment_method === 'transfer' && (
+                  <div className="payment-form-container">
+                    <TransferForm
+                      amount={totals.total}
+                      orderId={null}
+                      onPaymentSuccess={handleTransferPayment}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Special Instructions */}
@@ -278,21 +383,34 @@ function Checkout() {
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-success btn-xl btn-block hover-lift"
-              >
-                {loading ? (
-                  <>
-                    <span className="loading-spinner"></span>
-                    Procesando pedido...
-                  </>
-                ) : (
-                  <>✓ Confirmar Pedido</>
-                )}
-              </button>
+              {/* Submit Button - Solo mostrar si no hay formulario de pago activo */}
+              {!showPaymentForm && (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-success btn-xl btn-block hover-lift"
+                >
+                  {loading ? (
+                    <>
+                      <span className="loading-spinner"></span>
+                      Procesando pedido...
+                    </>
+                  ) : (
+                    <>✓ {formData.payment_method === 'cash' ? 'Confirmar Pedido' : 'Continuar al Pago'}</>
+                  )}
+                </button>
+              )}
+
+              {/* Botón para volver si está en el formulario de pago */}
+              {showPaymentForm && (
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentForm(false)}
+                  className="btn btn-ghost btn-block"
+                >
+                  ← Volver a la información de entrega
+                </button>
+              )}
             </form>
           </div>
 

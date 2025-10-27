@@ -10,6 +10,10 @@ function OrderDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Obtener info del usuario actual
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAdmin = currentUser.role === 'admin';
+
   useEffect(() => {
     const loadOrder = async () => {
       try {
@@ -158,6 +162,27 @@ function OrderDetail() {
             </div>
           </div>
         </div>
+
+        {/* Admin Info Section */}
+        {isAdmin && order.user_name && (
+          <div className="admin-info animate-fade-in-up animate-delay-1">
+            <h3>📊 Información del Cliente</h3>
+            <div className="admin-info-grid">
+              <div className="admin-info-item">
+                <span className="admin-info-label">Nombre:</span>
+                <span className="admin-info-value">{order.user_name}</span>
+              </div>
+              <div className="admin-info-item">
+                <span className="admin-info-label">Email:</span>
+                <span className="admin-info-value">{order.user_email}</span>
+              </div>
+              <div className="admin-info-item">
+                <span className="admin-info-label">ID de Usuario:</span>
+                <span className="admin-info-value">{order.user_id}</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Order Content Grid */}
         <div className="order-detail-grid">

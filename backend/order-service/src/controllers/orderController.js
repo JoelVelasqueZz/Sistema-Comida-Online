@@ -230,14 +230,30 @@ const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
+    const userRole = req.user.role;
 
-    // Obtener orden
-    const orderResult = await pool.query(
-      `SELECT o.*
-       FROM orders o
-       WHERE o.id = $1 AND o.user_id = $2`,
-      [id, userId]
-    );
+    console.log(`📦 getOrderById - Usuario: ${userId}, Role: ${userRole}, OrderID: ${id}`);
+
+    // Si es admin, puede ver cualquier pedido
+    // Si es customer, solo puede ver sus propios pedidos
+    const query = userRole === 'admin'
+      ? `SELECT o.*, u.name as user_name, u.email as user_email
+         FROM orders o
+         LEFT JOIN users u ON o.user_id = u.id
+         WHERE o.id = $1`
+      : `SELECT o.*, u.name as user_name, u.email as user_email
+         FROM orders o
+         LEFT JOIN users u ON o.user_id = u.id
+         WHERE o.id = $1 AND o.user_id = $2`;
+
+    const params = userRole === 'admin' ? [id] : [id, userId];
+
+    // Log de auditoría para admins
+    if (userRole === 'admin') {
+      console.log(`[AUDIT] Admin ${userId} accediendo al pedido ${id}`);
+    }
+
+    const orderResult = await pool.query(query, params);
 
     if (orderResult.rows.length === 0) {
       return res.status(404).json({ error: 'Orden no encontrada' });
@@ -247,7 +263,7 @@ const getOrderById = async (req, res) => {
 
     // Obtener items de la orden
     const itemsResult = await pool.query(
-      `SELECT oi.*, 
+      `SELECT oi.*,
               (SELECT json_agg(json_build_object('id', oie.id, 'name', oie.name, 'price', oie.price))
                FROM order_item_extras oie
                WHERE oie.order_item_id = oi.id) as extras
@@ -257,6 +273,8 @@ const getOrderById = async (req, res) => {
     );
 
     order.items = itemsResult.rows;
+
+    console.log(`✅ Orden ${id} obtenida exitosamente para ${userRole}`);
 
     res.json({ order });
 

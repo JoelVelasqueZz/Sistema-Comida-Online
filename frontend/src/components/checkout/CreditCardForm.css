@@ -1,0 +1,387 @@
+/* CreditCardForm.css - Estilos para formulario de tarjeta de crédito */
+
+.credit-card-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 2rem 1rem;
+  background: transparent;
+  border-radius: 16px;
+  position: relative;
+}
+
+/* Tarjeta Custom */
+.credit-card-preview {
+  width: 350px;
+  height: 220px;
+  border-radius: 15px;
+  padding: 25px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  color: white;
+  position: relative;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.credit-card-preview.flipped {
+  transform: rotateY(180deg);
+}
+
+.credit-card-preview.visa {
+  background: linear-gradient(135deg, #1434CB, #2D50E6);
+}
+
+.credit-card-preview.mastercard {
+  background: linear-gradient(135deg, #EB001B, #F79E1B);
+}
+
+.credit-card-preview.amex {
+  background: linear-gradient(135deg, #006FCF, #00A3E0);
+}
+
+.credit-card-preview.discover {
+  background: linear-gradient(135deg, #FF6000, #FFA500);
+}
+
+.card-front {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  backface-visibility: hidden;
+}
+
+.card-chip {
+  width: 50px;
+  height: 40px;
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-radius: 8px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 5px;
+}
+
+.chip-line {
+  height: 2px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 1px;
+}
+
+.card-type-logo {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  font-size: 14px;
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.card-number {
+  font-size: 22px;
+  letter-spacing: 2px;
+  margin: 25px 0;
+  font-family: 'Courier New', monospace;
+  word-spacing: 4px;
+}
+
+.card-holder {
+  display: inline-block;
+  margin-right: 20px;
+  max-width: 55%;
+  vertical-align: bottom;
+}
+
+.card-expiry {
+  display: inline-block;
+  margin-right: 20px;
+  vertical-align: bottom;
+}
+
+.card-label {
+  font-size: 10px;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.card-value {
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.card-back {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+}
+
+.credit-card-preview.visa .card-back {
+  background: linear-gradient(135deg, #1434CB, #2D50E6);
+}
+
+.credit-card-preview.mastercard .card-back {
+  background: linear-gradient(135deg, #EB001B, #F79E1B);
+}
+
+.credit-card-preview.amex .card-back {
+  background: linear-gradient(135deg, #006FCF, #00A3E0);
+}
+
+.credit-card-preview.discover .card-back {
+  background: linear-gradient(135deg, #FF6000, #FFA500);
+}
+
+.card-stripe {
+  width: 100%;
+  height: 50px;
+  background: #000;
+  margin-top: 30px;
+}
+
+.card-cvv {
+  background: white;
+  color: black;
+  padding: 10px;
+  margin: 20px;
+  border-radius: 5px;
+  text-align: right;
+}
+
+.cvv-label {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-bottom: 5px;
+}
+
+.cvv-value {
+  font-size: 18px;
+  font-weight: bold;
+  font-family: 'Courier New', monospace;
+}
+
+.card-type-badge {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-icon {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-icon.visa {
+  color: #1a1f71;
+}
+
+.card-icon.mastercard {
+  color: #eb001b;
+}
+
+.card-icon.amex {
+  color: #006fcf;
+}
+
+.card-icon.discover {
+  color: #ff6000;
+}
+
+.card-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-group input[type="text"] {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input[type="text"]:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input[type="text"].error {
+  border-color: #ef4444;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.form-group.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-group.checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.form-group.checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.error-banner {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #ef4444;
+  font-weight: 500;
+}
+
+.pay-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.pay-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+}
+
+.pay-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.test-cards-info {
+  background: #f3f4f6;
+  padding: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.test-cards-info p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.test-cards-info ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.test-cards-info li {
+  margin: 0.25rem 0;
+  font-family: 'Courier New', monospace;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .credit-card-form {
+    grid-template-columns: 1fr;
+  }
+
+  .card-preview {
+    order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .credit-card-form {
+    padding: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .pay-button {
+    font-size: 1rem;
+    padding: 0.875rem 1.5rem;
+  }
+}
