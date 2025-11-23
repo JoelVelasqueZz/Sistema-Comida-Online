@@ -5,6 +5,7 @@ require('dotenv').config();
 const orderRoutes = require('./routes/orderRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const deliveryRoutes = require('./routes/deliveryRoutes');
 const pool = require('./config/database');
 const { startSchedulers } = require('./schedulers/orderStatusScheduler');
 
@@ -41,6 +42,7 @@ app.get('/health', async (req, res) => {
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/delivery', deliveryRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });

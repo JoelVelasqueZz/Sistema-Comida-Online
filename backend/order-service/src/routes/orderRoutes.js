@@ -10,6 +10,9 @@ const authMiddleware = require('../middlewares/authMiddleware');
 // Obtener estadísticas de pedidos de un usuario (llamada desde auth-service)
 router.get('/user/:userId/stats', orderController.getUserOrderStats);
 
+// Confirmar pago por QR (sin autenticación - solo necesita el token)
+router.get('/confirm-payment/:orderId/:token', orderController.confirmPayment);
+
 // ============================================
 // RUTAS CON AUTENTICACIÓN
 // ============================================

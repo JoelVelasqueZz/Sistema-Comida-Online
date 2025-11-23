@@ -154,11 +154,19 @@ const CreditCardForm = ({ onPaymentSuccess, amount }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    console.log('💳 CreditCardForm - handleSubmit LLAMADO');
+    console.log('💳 Datos de tarjeta:', cardData);
 
+    if (!validateForm()) {
+      console.log('❌ Validación de formulario falló');
+      return;
+    }
+
+    console.log('✅ Validación de formulario exitosa');
     setProcessing(true);
 
     try {
+      console.log('⏳ Simulando procesamiento de pago...');
       const result = await simulatePayment();
 
       // Si el usuario quiere guardar la tarjeta
@@ -177,14 +185,24 @@ const CreditCardForm = ({ onPaymentSuccess, amount }) => {
         localStorage.setItem('savedCards', JSON.stringify(savedCards));
       }
 
-      onPaymentSuccess({
+      console.log('✅ Pago simulado exitoso:', result);
+      console.log('📞 Llamando a onPaymentSuccess del padre...');
+
+      const paymentInfo = {
         method: 'card',
         transactionId: result.transactionId,
         cardType: getCardType(cardData.number),
         lastFour: cardData.number.slice(-4)
-      });
+      };
+
+      console.log('📦 Datos de pago a enviar:', paymentInfo);
+
+      onPaymentSuccess(paymentInfo);
+
+      console.log('✅ onPaymentSuccess ejecutado');
 
     } catch (error) {
+      console.error('❌ Error en CreditCardForm:', error);
       setErrors({ submit: error.message });
     } finally {
       setProcessing(false);

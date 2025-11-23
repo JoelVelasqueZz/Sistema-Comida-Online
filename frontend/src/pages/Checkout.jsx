@@ -1,15 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { orderService } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
+import { sendOrderConfirmation } from '../services/emailService';
 import CreditCardForm from '../components/checkout/CreditCardForm';
 import TransferForm from '../components/checkout/TransferForm';
 import './Checkout.css';
 
 function Checkout() {
   const { cartItems, getCartTotal, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Debug: Log del usuario al cargar el componente
+  useEffect(() => {
+    console.log('🛒 Checkout - Componente cargado');
+    console.log('👤 Usuario en Checkout:', user);
+    if (user) {
+      console.log('📧 Email del usuario:', user.email);
+      console.log('👤 Nombre del usuario:', user.name);
+      console.log('🆔 ID del usuario:', user.id);
+      console.log('🎭 Role del usuario:', user.role);
+    } else {
+      console.warn('⚠️ No hay usuario en el contexto');
+    }
+  }, [user]);
 
   const [formData, setFormData] = useState({
     street: '',
@@ -23,6 +40,9 @@ function Checkout() {
   const [error, setError] = useState('');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [pendingOrderData, setPendingOrderData] = useState(null);
+  const [confirmationUrl, setConfirmationUrl] = useState(null);
+  const [currentOrderId, setCurrentOrderId] = useState(null);
+  const [creatingOrder, setCreatingOrder] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -39,9 +59,27 @@ function Checkout() {
     return { subtotal, delivery_fee, tax, total };
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    console.log('🎯 handleSubmit LLAMADO');
+    console.log('📋 formData:', formData);
+    console.log('🛒 cartItems:', cartItems);
+
     setError('');
+
+    // Validar campos requeridos
+    if (!formData.street || !formData.city) {
+      setError('Por favor completa la dirección de entrega (Calle y Ciudad son requeridos)');
+      alert('❌ Por favor completa la dirección de entrega');
+      return;
+    }
+
+    if (!formData.payment_method) {
+      setError('Por favor selecciona un método de pago');
+      alert('❌ Por favor selecciona un método de pago');
+      return;
+    }
+
+    console.log('✅ Validación pasada, continuando...');
 
     // Si es tarjeta o transferencia, mostrar el formulario de pago
     if (formData.payment_method === 'card' || formData.payment_method === 'transfer') {
@@ -102,6 +140,23 @@ function Checkout() {
 
       await paymentService.processPayment(paymentData);
 
+      // Debug: Verificar datos del usuario
+      console.log('🔍 Usuario actual:', user);
+      console.log('🔍 Email del usuario:', user?.email);
+      console.log('🔍 Nombre del usuario:', user?.name);
+
+      // Enviar email de confirmación (no bloqueante)
+      sendOrderConfirmation({
+        orderId: orderResponse.order.id,
+        customerName: user?.name || 'Cliente',
+        customerEmail: user?.email,
+        items: cartItems,
+        total: totals.total,
+        paymentMethod: formData.payment_method,
+        deliveryAddress: `${formData.street}, ${formData.city}${formData.postal_code ? ', ' + formData.postal_code : ''}`,
+        createdAt: new Date()
+      }).catch(err => console.error('Error al enviar email (no crítico):', err));
+
       clearCart();
       navigate('/orders');
     } catch (err) {
@@ -114,13 +169,37 @@ function Checkout() {
   };
 
   const handleCardPayment = async (paymentInfo) => {
+    console.log('🎯🎯🎯 handleCardPayment INICIADO 🎯🎯🎯');
+    console.log('💳 Datos de pago recibidos:', paymentInfo);
+    console.log('📦 Datos de orden pendiente:', pendingOrderData);
+    console.log('🛒 Items en carrito:', cartItems);
+    console.log('📊 Cantidad de items:', cartItems?.length || 0);
+
     setLoading(true);
+
     try {
-      console.log('💳 Procesando pago con tarjeta:', paymentInfo);
 
+      // Validar que tengamos datos de orden
+      if (!pendingOrderData) {
+        throw new Error('No hay datos de orden pendiente');
+      }
+
+      if (!pendingOrderData.items || pendingOrderData.items.length === 0) {
+        throw new Error('No hay items en la orden');
+      }
+
+      // PASO 1: Crear la orden en la base de datos
+      console.log('📤 Enviando orden a la base de datos...');
       const orderResponse = await orderService.createOrder(pendingOrderData);
-      console.log('✅ Orden creada:', orderResponse);
+      console.log('✅ Orden creada exitosamente:', orderResponse);
 
+      // Verificar que la orden se creó correctamente
+      if (!orderResponse.order || !orderResponse.order.id) {
+        throw new Error('La orden no se creó correctamente');
+      }
+
+      // PASO 2: Procesar el pago
+      console.log('💳 Procesando pago para orden:', orderResponse.order.id);
       const paymentData = {
         order_id: orderResponse.order.id,
         payment_method: 'card',
@@ -130,46 +209,134 @@ function Checkout() {
       };
 
       await paymentService.processPayment(paymentData);
+      console.log('✅ Pago procesado exitosamente');
 
+      // PASO 3: Enviar email de confirmación (no bloqueante)
+      // Debug: Verificar datos del usuario
+      console.log('🔍 Usuario actual (tarjeta):', user);
+      console.log('🔍 Email del usuario (tarjeta):', user?.email);
+
+      sendOrderConfirmation({
+        orderId: orderResponse.order.id,
+        customerName: user?.name || 'Cliente',
+        customerEmail: user?.email,
+        items: cartItems,
+        total: totals.total,
+        paymentMethod: 'card',
+        deliveryAddress: `${pendingOrderData.delivery_address.street}, ${pendingOrderData.delivery_address.city}${pendingOrderData.delivery_address.postal_code ? ', ' + pendingOrderData.delivery_address.postal_code : ''}`,
+        createdAt: new Date()
+      }).catch(err => console.error('Error al enviar email (no crítico):', err));
+
+      // PASO 4: SOLO AHORA limpiar el carrito (después de que todo fue exitoso)
+      console.log('🧹 Limpiando carrito...');
       clearCart();
+
+      // PASO 5: Redirigir a órdenes
+      console.log('🎉 Redirigiendo a /orders');
       navigate('/orders');
+
     } catch (err) {
-      console.error('Error al procesar pago:', err);
-      setError(err.response?.data?.error || 'Error al procesar el pago');
+      console.error('❌ Error al procesar pago con tarjeta:', err);
+      console.error('Detalles del error:', err.response || err);
+
+      const errorMessage = err.response?.data?.error || err.message || 'Error al procesar el pago';
+      setError(errorMessage);
+      alert(`❌ Error: ${errorMessage}`);
+
+      // NO limpiar el carrito si hubo error
       setShowPaymentForm(false);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleTransferPayment = async (transferInfo) => {
-    setLoading(true);
-    try {
-      console.log('📱 Procesando transferencia:', transferInfo);
+  // Función para crear la orden de transferencia (llamada automáticamente al mostrar el formulario)
+  const createTransferOrder = async () => {
+    // Prevenir doble ejecución
+    if (creatingOrder) {
+      console.log('⚠️ Ya se está creando una orden, ignorando...');
+      return;
+    }
 
+    // Si ya hay confirmationUrl, no crear otra orden
+    if (confirmationUrl) {
+      console.log('⚠️ Ya existe URL de confirmación, no crear orden duplicada');
+      return;
+    }
+
+    setCreatingOrder(true);
+    setLoading(true);
+
+    try {
+      console.log('🏦 createTransferOrder INICIADO');
+      console.log('📦 Datos de orden pendiente:', pendingOrderData);
+
+      // Validar que tengamos datos de orden
+      if (!pendingOrderData) {
+        throw new Error('No hay datos de orden pendiente');
+      }
+
+      if (!pendingOrderData.items || pendingOrderData.items.length === 0) {
+        throw new Error('No hay items en la orden');
+      }
+
+      console.log('📤 Creando orden en la base de datos...');
       const orderResponse = await orderService.createOrder(pendingOrderData);
       console.log('✅ Orden creada:', orderResponse);
 
-      const paymentData = {
-        order_id: orderResponse.order.id,
-        payment_method: 'transfer',
-        transaction_id: transferInfo.transactionId,
-        reference: transferInfo.reference,
-        status: transferInfo.status
-      };
+      // Verificar que la orden se creó correctamente
+      if (!orderResponse.order || !orderResponse.order.id) {
+        throw new Error('La orden no se creó correctamente');
+      }
 
-      await paymentService.processPayment(paymentData);
+      // Guardar la URL de confirmación y el ID de la orden
+      setCurrentOrderId(orderResponse.order.id);
 
-      clearCart();
-      navigate('/orders');
+      if (orderResponse.confirmationUrl) {
+        setConfirmationUrl(orderResponse.confirmationUrl);
+        console.log('📱 URL de confirmación generada:', orderResponse.confirmationUrl);
+      }
+
+      // Enviar email de confirmación (no bloqueante)
+      // Debug: Verificar datos del usuario
+      console.log('🔍 Usuario actual (transferencia):', user);
+      console.log('🔍 Email del usuario (transferencia):', user?.email);
+
+      sendOrderConfirmation({
+        orderId: orderResponse.order.id,
+        customerName: user?.name || 'Cliente',
+        customerEmail: user?.email,
+        items: cartItems,
+        total: totals.total,
+        paymentMethod: 'transfer',
+        deliveryAddress: `${pendingOrderData.delivery_address.street}, ${pendingOrderData.delivery_address.city}${pendingOrderData.delivery_address.postal_code ? ', ' + pendingOrderData.delivery_address.postal_code : ''}`,
+        createdAt: new Date()
+      }).catch(err => console.error('Error al enviar email (no crítico):', err));
+
+      console.log('✅ Orden de transferencia lista');
+
     } catch (err) {
-      console.error('Error al procesar transferencia:', err);
-      setError(err.response?.data?.error || 'Error al procesar la transferencia');
+      console.error('❌ Error al crear orden de transferencia:', err);
+      console.error('Detalles del error:', err.response || err);
+
+      const errorMessage = err.response?.data?.error || err.message || 'Error al crear la orden';
+      setError(errorMessage);
+      alert(`❌ Error: ${errorMessage}`);
+
       setShowPaymentForm(false);
     } finally {
       setLoading(false);
+      setCreatingOrder(false);
     }
   };
+
+  // Efecto para crear la orden automáticamente cuando se muestra el formulario de transferencia
+  useEffect(() => {
+    if (showPaymentForm && formData.payment_method === 'transfer' && pendingOrderData && !confirmationUrl && !creatingOrder) {
+      console.log('🔔 Se detectó formulario de transferencia, creando orden automáticamente...');
+      createTransferOrder();
+    }
+  }, [showPaymentForm, formData.payment_method]);
 
   const totals = calculateTotals();
 
@@ -214,7 +381,7 @@ function Checkout() {
         <div className="checkout-layout">
           {/* Form Section */}
           <div className="checkout-form-section">
-            <form onSubmit={handleSubmit} className="checkout-form animate-fade-in-up animate-delay-1">
+            <div className="checkout-form animate-fade-in-up animate-delay-1">
               {/* Address Section */}
               <div className="form-section card">
                 <h2 className="form-section-title heading-4">
@@ -355,8 +522,12 @@ function Checkout() {
                   <div className="payment-form-container">
                     <TransferForm
                       amount={totals.total}
-                      orderId={null}
-                      onPaymentSuccess={handleTransferPayment}
+                      orderId={currentOrderId}
+                      confirmationUrl={confirmationUrl}
+                      onClose={() => {
+                        clearCart();
+                        navigate('/orders');
+                      }}
                     />
                   </div>
                 )}
@@ -386,7 +557,8 @@ function Checkout() {
               {/* Submit Button - Solo mostrar si no hay formulario de pago activo */}
               {!showPaymentForm && (
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit}
                   disabled={loading}
                   className="btn btn-success btn-xl btn-block hover-lift"
                 >
@@ -411,7 +583,7 @@ function Checkout() {
                   ← Volver a la información de entrega
                 </button>
               )}
-            </form>
+            </div>
           </div>
 
           {/* Summary Section */}

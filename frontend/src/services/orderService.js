@@ -36,5 +36,11 @@ export const orderService = {
   updateOrderStatus: async (id, status) => {
     const response = await api.patch(`/orders/${id}/status`, { status });
     return response.data;
+  },
+
+  // Confirmar pago por QR
+  confirmPayment: async (orderId, token) => {
+    const response = await api.get(`/orders/confirm-payment/${orderId}/${token}`);
+    return response.data;
   }
 };

@@ -43,6 +43,7 @@ function Orders() {
       pending: 'badge-pending',
       confirmed: 'badge-confirmed',
       preparing: 'badge-preparing',
+      ready: 'badge-ready',
       delivering: 'badge-delivering',
       delivered: 'badge-delivered',
       cancelled: 'badge-cancelled'
@@ -55,6 +56,7 @@ function Orders() {
       pending: { text: 'Pendiente', emoji: '⏳' },
       confirmed: { text: 'Confirmado', emoji: '✅' },
       preparing: { text: 'En preparación', emoji: '👨‍🍳' },
+      ready: { text: 'Listo', emoji: '📦' },
       delivering: { text: 'En camino', emoji: '🚚' },
       delivered: { text: 'Entregado', emoji: '🎉' },
       cancelled: { text: 'Cancelado', emoji: '❌' }
@@ -132,6 +134,12 @@ function Orders() {
             className={`filter-chip ${filter === 'preparing' ? 'active' : ''} hover-grow`}
           >
             👨‍🍳 Preparando
+          </button>
+          <button
+            onClick={() => setFilter('ready')}
+            className={`filter-chip ${filter === 'ready' ? 'active' : ''} hover-grow`}
+          >
+            📦 Listo
           </button>
           <button
             onClick={() => setFilter('delivering')}

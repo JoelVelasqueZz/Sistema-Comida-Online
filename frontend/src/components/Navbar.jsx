@@ -97,25 +97,46 @@ function Navbar() {
             {user ? (
               <>
                 {/* Links para usuarios autenticados */}
-                <Link
-                  to="/orders"
-                  className={`navbar-link hover-underline ${isActive('/orders')}`}
-                  onClick={closeMobileMenu}
-                >
-                  📦 Mis Pedidos
-                </Link>
+                {user.role === 'delivery' ? (
+                  <>
+                    <Link
+                      to="/delivery/available-orders"
+                      className={`navbar-link hover-underline ${isActive('/delivery/available-orders')}`}
+                      onClick={closeMobileMenu}
+                    >
+                      📦 Disponibles
+                    </Link>
+                    <Link
+                      to="/delivery/my-deliveries"
+                      className={`navbar-link hover-underline ${isActive('/delivery/my-deliveries')}`}
+                      onClick={closeMobileMenu}
+                    >
+                      🚚 Mis Entregas
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/orders"
+                      className={`navbar-link hover-underline ${isActive('/orders')}`}
+                      onClick={closeMobileMenu}
+                    >
+                      📦 Mis Pedidos
+                    </Link>
 
-                {/* Carrito con badge animado */}
-                <Link
-                  to="/cart"
-                  className="navbar-cart"
-                  onClick={closeMobileMenu}
-                >
-                  🛒 Carrito
-                  {getItemCount() > 0 && (
-                    <span className="cart-badge">{getItemCount()}</span>
-                  )}
-                </Link>
+                    {/* Carrito con badge animado */}
+                    <Link
+                      to="/cart"
+                      className="navbar-cart"
+                      onClick={closeMobileMenu}
+                    >
+                      🛒 Carrito
+                      {getItemCount() > 0 && (
+                        <span className="cart-badge">{getItemCount()}</span>
+                      )}
+                    </Link>
+                  </>
+                )}
 
                 {/* Dropdown de Perfil */}
                 <div className="profile-dropdown-container" ref={dropdownRef}>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import './TransferForm.css';
 
-const TransferForm = ({ onPaymentSuccess, amount, orderId }) => {
+const TransferForm = ({ onClose, amount, orderId, confirmationUrl }) => {
   const [qrData, setQrData] = useState('');
   const [bankInfo, setBankInfo] = useState(null);
   const [showUpload, setShowUpload] = useState(false);
@@ -21,16 +21,21 @@ const TransferForm = ({ onPaymentSuccess, amount, orderId }) => {
       currency: 'USD'
     };
 
-    // Datos para el QR (formato simplificado)
-    const qrContent = JSON.stringify({
-      bank: bankData.bank,
-      account: bankData.accountNumber,
-      amount: bankData.amount,
-      ref: bankData.reference
-    });
-
     setBankInfo(bankData);
-    setQrData(qrContent);
+
+    // Si hay URL de confirmación, usar esa en el QR
+    // Si no, usar los datos bancarios (comportamiento anterior)
+    if (confirmationUrl) {
+      setQrData(confirmationUrl);
+    } else {
+      const qrContent = JSON.stringify({
+        bank: bankData.bank,
+        account: bankData.accountNumber,
+        amount: bankData.amount,
+        ref: bankData.reference
+      });
+      setQrData(qrContent);
+    }
 
     // Countdown timer
     const timer = setInterval(() => {
@@ -44,7 +49,7 @@ const TransferForm = ({ onPaymentSuccess, amount, orderId }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [amount, orderId]);
+  }, [amount, orderId, confirmationUrl]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -65,14 +70,13 @@ const TransferForm = ({ onPaymentSuccess, amount, orderId }) => {
       return;
     }
 
-    // Simular confirmación
-    onPaymentSuccess({
-      method: 'transfer',
-      transactionId: `TRF${Date.now()}`,
-      reference: bankInfo.reference,
-      status: 'pending_verification', // Admin debe verificar
-      receiptUploaded: showUpload
-    });
+    console.log('📱 Usuario confirmó transferencia');
+    alert('✅ Orden creada. Escanea el código QR para confirmar tu pago automáticamente, o espera la verificación manual.');
+
+    // Llamar a onClose que limpiará el carrito y redirigirá
+    if (onClose) {
+      onClose();
+    }
   };
 
   const handleFileUpload = (e) => {
@@ -121,7 +125,10 @@ const TransferForm = ({ onPaymentSuccess, amount, orderId }) => {
             />
           </div>
           <p className="qr-instruction">
-            Escanea el código QR con tu app bancaria
+            {confirmationUrl
+              ? '📱 Escanea para confirmar tu pago automáticamente'
+              : 'Escanea el código QR con tu app bancaria'
+            }
           </p>
         </div>
 

@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const axios = require('axios');
+const crypto = require('crypto');
 
 // ============================================
 // CREAR ORDEN
@@ -146,6 +147,26 @@ const createOrder = async (req, res) => {
     await client.query('COMMIT');
     console.log('Orden completada exitosamente');
 
+    // Generar token de confirmación de pago si el método es 'transfer'
+    let confirmationUrl = null;
+    let paymentToken = null;
+
+    if (payment_method === 'transfer') {
+      paymentToken = crypto.randomBytes(32).toString('hex');
+
+      // Actualizar orden con el token
+      await pool.query(
+        'UPDATE orders SET payment_token = $1, payment_status = $2 WHERE id = $3',
+        [paymentToken, 'pending', order.id]
+      );
+
+      // Generar URL de confirmación
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      confirmationUrl = `${frontendUrl}/confirm-payment/${order.id}/${paymentToken}`;
+
+      console.log('📱 QR generado:', confirmationUrl);
+    }
+
     res.status(201).json({
       message: 'Orden creada exitosamente',
       order: {
@@ -159,7 +180,9 @@ const createOrder = async (req, res) => {
         street: order.street,
         city: order.city,
         created_at: order.created_at
-      }
+      },
+      confirmationUrl,
+      paymentToken
     });
 
   } catch (error) {
@@ -183,10 +206,15 @@ const getUserOrders = async (req, res) => {
     console.log('📋 getUserOrders - Filtro status:', status);
 
     let query = `
-      SELECT o.id, o.status, o.subtotal, o.delivery_fee, o.tax, o.total,
-             o.payment_method, o.created_at, o.estimated_delivery,
-             o.street, o.city, o.postal_code, o.reference
+      SELECT
+        o.id, o.status, o.subtotal, o.delivery_fee, o.tax, o.total,
+        o.payment_method, o.created_at, o.estimated_delivery,
+        o.street, o.city, o.postal_code, o.reference,
+        o.confirmed_at, o.preparing_at, o.ready_at, o.picked_up_at, o.delivered_at,
+        u_delivery.name as delivery_person_name,
+        u_delivery.phone as delivery_person_phone
       FROM orders o
+      LEFT JOIN users u_delivery ON o.delivery_person_id = u_delivery.id
       WHERE o.user_id = $1
     `;
 
@@ -237,13 +265,29 @@ const getOrderById = async (req, res) => {
     // Si es admin, puede ver cualquier pedido
     // Si es customer, solo puede ver sus propios pedidos
     const query = userRole === 'admin'
-      ? `SELECT o.*, u.name as user_name, u.email as user_email
+      ? `SELECT
+          o.*,
+          u_customer.name as user_name,
+          u_customer.email as user_email,
+          u_customer.phone as user_phone,
+          u_delivery.name as delivery_person_name,
+          u_delivery.phone as delivery_person_phone,
+          u_delivery.email as delivery_person_email
          FROM orders o
-         LEFT JOIN users u ON o.user_id = u.id
+         LEFT JOIN users u_customer ON o.user_id = u_customer.id
+         LEFT JOIN users u_delivery ON o.delivery_person_id = u_delivery.id
          WHERE o.id = $1`
-      : `SELECT o.*, u.name as user_name, u.email as user_email
+      : `SELECT
+          o.*,
+          u_customer.name as user_name,
+          u_customer.email as user_email,
+          u_customer.phone as user_phone,
+          u_delivery.name as delivery_person_name,
+          u_delivery.phone as delivery_person_phone,
+          u_delivery.email as delivery_person_email
          FROM orders o
-         LEFT JOIN users u ON o.user_id = u.id
+         LEFT JOIN users u_customer ON o.user_id = u_customer.id
+         LEFT JOIN users u_delivery ON o.delivery_person_id = u_delivery.id
          WHERE o.id = $1 AND o.user_id = $2`;
 
     const params = userRole === 'admin' ? [id] : [id, userId];
@@ -285,34 +329,135 @@ const getOrderById = async (req, res) => {
 };
 
 // ============================================
-// ACTUALIZAR ESTADO DE ORDEN (Solo admin)
+// ACTUALIZAR ESTADO DE ORDEN
 // ============================================
 const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, notes } = req.body;
+    const userRole = req.user.role;
+    const userId = req.user.userId;
 
-    const validStatuses = ['pending', 'confirmed', 'preparing', 'delivering', 'delivered', 'cancelled'];
+    const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivering', 'delivered', 'cancelled'];
 
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Estado inválido' });
     }
 
-    const result = await pool.query(
-      `UPDATE orders
-       SET status = $1, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $2
-       RETURNING *`,
-      [status, id]
-    );
+    // VALIDACIÓN: Admin puede cambiar a todos excepto 'delivering'
+    if (userRole === 'admin') {
+      const adminAllowedStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled'];
+
+      if (!adminAllowedStatuses.includes(status)) {
+        return res.status(403).json({
+          error: `Los administradores no pueden cambiar pedidos a "${status}"`,
+          hint: 'El estado "En Camino" solo puede ser marcado por el repartidor al recoger el pedido'
+        });
+      }
+
+      // Advertencia si marca como entregado sin repartidor
+      if (status === 'delivered') {
+        const orderCheck = await pool.query(
+          'SELECT delivery_person_id FROM orders WHERE id = $1',
+          [id]
+        );
+
+        if (orderCheck.rows.length > 0 && !orderCheck.rows[0].delivery_person_id) {
+          console.log(`⚠️ Admin marcando pedido ${id} como entregado sin repartidor asignado`);
+        }
+      }
+    }
+
+    // VALIDACIÓN: Repartidor solo puede cambiar sus propios pedidos asignados
+    if (userRole === 'delivery') {
+      const orderCheck = await pool.query(
+        'SELECT delivery_person_id FROM orders WHERE id = $1',
+        [id]
+      );
+
+      if (orderCheck.rows.length === 0) {
+        return res.status(404).json({ error: 'Pedido no encontrado' });
+      }
+
+      if (orderCheck.rows[0].delivery_person_id !== userId) {
+        return res.status(403).json({ error: 'Este pedido no está asignado a ti' });
+      }
+    }
+
+    // Determinar qué columna de timestamp actualizar según el estado
+    let timestampColumn = null;
+
+    switch(status) {
+      case 'confirmed':
+        timestampColumn = 'confirmed_at';
+        break;
+      case 'preparing':
+        timestampColumn = 'preparing_at';
+        break;
+      case 'ready':
+        timestampColumn = 'ready_at';
+        break;
+      case 'delivering':
+        timestampColumn = 'picked_up_at';
+        break;
+      case 'delivered':
+        timestampColumn = 'delivered_at';
+        break;
+      default:
+        timestampColumn = null;
+    }
+
+    // Construir query dinámicamente
+    let query;
+    if (timestampColumn) {
+      query = `
+        UPDATE orders
+        SET status = $1,
+            ${timestampColumn} = NOW(),
+            updated_at = NOW()
+        WHERE id = $2
+        RETURNING *
+      `;
+    } else {
+      query = `
+        UPDATE orders
+        SET status = $1, updated_at = NOW()
+        WHERE id = $2
+        RETURNING *
+      `;
+    }
+
+    // Ejecutar la actualización
+    const result = await pool.query(query, [status, id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Orden no encontrada' });
     }
 
+    // Obtener información completa del pedido con datos del repartidor
+    const orderInfoQuery = await pool.query(
+      `SELECT
+        o.*,
+        u_customer.name as customer_name,
+        u_customer.phone as customer_phone,
+        u_delivery.name as delivery_person_name,
+        u_delivery.phone as delivery_person_phone
+       FROM orders o
+       LEFT JOIN users u_customer ON o.user_id = u_customer.id
+       LEFT JOIN users u_delivery ON o.delivery_person_id = u_delivery.id
+       WHERE o.id = $1`,
+      [id]
+    );
+
+    // Log para auditoría
+    console.log(`📝 Pedido ${id} cambió a estado "${status}" por ${userRole} (${userId})`);
+    if (timestampColumn) {
+      console.log(`⏰ Timestamp guardado: ${timestampColumn} = NOW()`);
+    }
+
     res.json({
       message: 'Estado actualizado exitosamente',
-      order: result.rows[0]
+      order: orderInfoQuery.rows[0]
     });
 
   } catch (error) {
@@ -443,6 +588,75 @@ const getUserOrderStats = async (req, res) => {
   }
 };
 
+// ============================================
+// CONFIRMAR PAGO POR QR
+// ============================================
+const confirmPayment = async (req, res) => {
+  try {
+    const { orderId, token } = req.params;
+
+    console.log(`💳 Confirmación de pago - Orden: ${orderId}`);
+
+    // Verificar token
+    const result = await pool.query(
+      `SELECT id, payment_status, payment_token, total, payment_method
+       FROM orders
+       WHERE id = $1 AND payment_token = $2`,
+      [orderId, token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Orden no encontrada o token inválido'
+      });
+    }
+
+    const order = result.rows[0];
+
+    if (order.payment_status === 'completed') {
+      return res.json({
+        success: true,
+        message: 'Esta orden ya fue pagada anteriormente',
+        alreadyPaid: true
+      });
+    }
+
+    // Validar que sea método de pago transfer
+    if (order.payment_method !== 'transfer') {
+      return res.status(400).json({
+        success: false,
+        error: 'Este método de confirmación solo es válido para pagos por transferencia'
+      });
+    }
+
+    // Marcar como pagada
+    await pool.query(
+      `UPDATE orders
+       SET payment_status = 'completed',
+           payment_confirmed_at = NOW(),
+           updated_at = NOW()
+       WHERE id = $1`,
+      [orderId]
+    );
+
+    console.log(`✅ Pago confirmado para orden ${orderId}`);
+
+    res.json({
+      success: true,
+      message: 'Pago confirmado exitosamente',
+      orderId,
+      total: parseFloat(order.total)
+    });
+  } catch (error) {
+    console.error('Error al confirmar pago:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error al confirmar pago'
+    });
+  }
+};
+
 module.exports = {
   createOrder,
   getUserOrders,
@@ -450,5 +664,6 @@ module.exports = {
   updateOrderStatus,
   cancelOrder,
   confirmDelivery,
-  getUserOrderStats
+  getUserOrderStats,
+  confirmPayment
 };

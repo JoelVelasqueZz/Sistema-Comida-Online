@@ -36,6 +36,7 @@ function OrderDetail() {
       pending: { text: 'Pendiente', emoji: '⏳', color: '#fbbf24' },
       confirmed: { text: 'Confirmado', emoji: '✅', color: '#10b981' },
       preparing: { text: 'En preparación', emoji: '👨‍🍳', color: '#3b82f6' },
+      ready: { text: 'Listo para Recoger', emoji: '📦', color: '#9b59b6' },
       delivering: { text: 'En camino', emoji: '🚚', color: '#ec4899' },
       delivered: { text: 'Entregado', emoji: '🎉', color: '#22c55e' },
       cancelled: { text: 'Cancelado', emoji: '❌', color: '#ef4444' }
@@ -48,6 +49,7 @@ function OrderDetail() {
       pending: 'badge-pending',
       confirmed: 'badge-confirmed',
       preparing: 'badge-preparing',
+      ready: 'badge-ready',
       delivering: 'badge-delivering',
       delivered: 'badge-delivered',
       cancelled: 'badge-cancelled'
@@ -327,38 +329,81 @@ function OrderDetail() {
               </h2>
               <div className="info-content">
                 <div className="order-timeline">
-                  <div className={`timeline-step ${['pending', 'confirmed', 'preparing', 'delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
+                  <div className={`timeline-step ${['pending', 'confirmed', 'preparing', 'ready', 'delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
                     <div className="timeline-dot"></div>
                     <div className="timeline-content">
-                      <p className="timeline-title">Pedido Recibido</p>
+                      <p className="timeline-title">📝 Pedido Recibido</p>
                       <p className="timeline-date">{formatDate(order.created_at)}</p>
                     </div>
                   </div>
-                  <div className={`timeline-step ${['confirmed', 'preparing', 'delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
+                  <div className={`timeline-step ${['confirmed', 'preparing', 'ready', 'delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
                     <div className="timeline-dot"></div>
                     <div className="timeline-content">
-                      <p className="timeline-title">Pedido Confirmado</p>
+                      <p className="timeline-title">✅ Pedido Confirmado</p>
+                      {order.confirmed_at && ['confirmed', 'preparing', 'ready', 'delivering', 'delivered'].includes(order.status) && (
+                        <p className="timeline-date">{formatDate(order.confirmed_at)}</p>
+                      )}
                     </div>
                   </div>
-                  <div className={`timeline-step ${['preparing', 'delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
+                  <div className={`timeline-step ${['preparing', 'ready', 'delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
                     <div className="timeline-dot"></div>
                     <div className="timeline-content">
-                      <p className="timeline-title">En Preparación</p>
+                      <p className="timeline-title">👨‍🍳 En Preparación</p>
+                      {order.preparing_at && ['preparing', 'ready', 'delivering', 'delivered'].includes(order.status) && (
+                        <p className="timeline-date">{formatDate(order.preparing_at)}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className={`timeline-step ${['ready', 'delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
+                    <div className="timeline-dot"></div>
+                    <div className="timeline-content">
+                      <p className="timeline-title">📦 Listo para Recoger</p>
+                      {order.ready_at && ['ready', 'delivering', 'delivered'].includes(order.status) && (
+                        <p className="timeline-date">{formatDate(order.ready_at)}</p>
+                      )}
                     </div>
                   </div>
                   <div className={`timeline-step ${['delivering', 'delivered'].includes(order.status) ? 'completed' : ''}`}>
                     <div className="timeline-dot"></div>
                     <div className="timeline-content">
-                      <p className="timeline-title">En Camino</p>
+                      <p className="timeline-title">🚚 En Camino</p>
+                      {order.picked_up_at && ['delivering', 'delivered'].includes(order.status) && (
+                        <p className="timeline-date">{formatDate(order.picked_up_at)}</p>
+                      )}
                     </div>
                   </div>
                   <div className={`timeline-step ${order.status === 'delivered' ? 'completed' : ''}`}>
                     <div className="timeline-dot"></div>
                     <div className="timeline-content">
-                      <p className="timeline-title">Entregado</p>
+                      <p className="timeline-title">🎉 Entregado</p>
+                      {order.delivered_at && order.status === 'delivered' && (
+                        <p className="timeline-date">{formatDate(order.delivered_at)}</p>
+                      )}
                     </div>
                   </div>
                 </div>
+
+                {/* Información del repartidor cuando esté asignado */}
+                {order.status === 'ready' && order.delivery_person_id && (
+                  <div className="delivery-person-info" style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#f3f4f6', borderRadius: '0.5rem' }}>
+                    <p className="info-text" style={{ margin: '0', fontSize: '0.95rem' }}>
+                      🚚 <strong>Repartidor asignado:</strong> {order.delivery_person_name || 'Asignado'}
+                    </p>
+                  </div>
+                )}
+
+                {order.status === 'delivering' && (
+                  <div className="delivery-person-info" style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#ecfdf5', borderRadius: '0.5rem', border: '1px solid #10b981' }}>
+                    <p className="info-text" style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>
+                      🚚 <strong>Tu repartidor:</strong> {order.delivery_person_name || 'En camino'}
+                    </p>
+                    {order.delivery_person_phone && (
+                      <p className="info-text" style={{ margin: '0', fontSize: '0.95rem' }}>
+                        📞 {order.delivery_person_phone}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 

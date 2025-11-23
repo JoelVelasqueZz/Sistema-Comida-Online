@@ -19,6 +19,9 @@ import AdminOrders from './pages/AdminOrders';
 import MenuManagement from './pages/admin/MenuManagement';
 import UserManagement from './pages/admin/UserManagement';
 import Reports from './pages/admin/Reports';
+import AvailableOrders from './pages/delivery/AvailableOrders';
+import MyDeliveries from './pages/delivery/MyDeliveries';
+import ConfirmPayment from './pages/ConfirmPayment';
 
 // Importar componente de protección de rutas admin
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
@@ -62,6 +65,9 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/menu" element={<Menu />} />
         <Route path="/product/:id" element={<ProductDetail />} />
+
+        {/* Ruta de confirmación de pago (pública - solo requiere token) */}
+        <Route path="/confirm-payment/:orderId/:token" element={<ConfirmPayment />} />
         
         {/* Rutas de autenticación (solo para no autenticados) */}
         <Route 
@@ -162,6 +168,24 @@ function AppRoutes() {
             <ProtectedAdminRoute>
               <Reports />
             </ProtectedAdminRoute>
+          }
+        />
+
+        {/* Rutas de Repartidor (Solo para usuarios con rol delivery) */}
+        <Route
+          path="/delivery/available-orders"
+          element={
+            <ProtectedRoute>
+              <AvailableOrders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/delivery/my-deliveries"
+          element={
+            <ProtectedRoute>
+              <MyDeliveries />
+            </ProtectedRoute>
           }
         />
 

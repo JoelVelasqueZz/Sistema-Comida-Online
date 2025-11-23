@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminService } from '../services/adminService';
+import { sendStatusUpdate } from '../services/emailService';
 import './AdminOrders.css';
 
 function AdminOrders() {
@@ -23,6 +24,18 @@ function AdminOrders() {
     { value: 'pending', label: 'Pendiente', icon: '⏳', color: 'warning' },
     { value: 'confirmed', label: 'Confirmado', icon: '✅', color: 'info' },
     { value: 'preparing', label: 'Preparando', icon: '👨‍🍳', color: 'primary' },
+    { value: 'ready', label: 'Listo para Recoger', icon: '📦', color: 'info' },
+    // 'delivering' - Solo repartidores pueden establecer este estado
+    { value: 'delivered', label: 'Entregado', icon: '🎉', color: 'success' },
+    { value: 'cancelled', label: 'Cancelado', icon: '❌', color: 'error' }
+  ];
+
+  // Estados completos para visualización (incluyendo los que solo repartidores pueden establecer)
+  const allStatusOptions = [
+    { value: 'pending', label: 'Pendiente', icon: '⏳', color: 'warning' },
+    { value: 'confirmed', label: 'Confirmado', icon: '✅', color: 'info' },
+    { value: 'preparing', label: 'Preparando', icon: '👨‍🍳', color: 'primary' },
+    { value: 'ready', label: 'Listo para Recoger', icon: '📦', color: 'info' },
     { value: 'delivering', label: 'En Camino', icon: '🚚', color: 'info' },
     { value: 'delivered', label: 'Entregado', icon: '🎉', color: 'success' },
     { value: 'cancelled', label: 'Cancelado', icon: '❌', color: 'error' }
@@ -62,7 +75,8 @@ function AdminOrders() {
   };
 
   const getStatusInfo = (status) => {
-    return statusOptions.find(s => s.value === status) || statusOptions[0];
+    // Usar allStatusOptions para visualización (incluye estados de repartidor)
+    return allStatusOptions.find(s => s.value === status) || allStatusOptions[0];
   };
 
   const handleStatusChange = (order) => {
@@ -91,6 +105,17 @@ function AdminOrders() {
           ? { ...order, status: newStatus }
           : order
       ));
+
+      // Enviar email de actualización de estado (no bloqueante)
+      // Solo enviar si el estado cambió
+      if (newStatus !== selectedOrder.status) {
+        sendStatusUpdate({
+          orderId: selectedOrder.id,
+          customerName: selectedOrder.user_name || 'Cliente',
+          customerEmail: selectedOrder.user_email,
+          status: newStatus
+        }).catch(err => console.error('Error al enviar email de actualización (no crítico):', err));
+      }
 
       setShowStatusModal(false);
       setSelectedOrder(null);
@@ -178,7 +203,7 @@ function AdminOrders() {
                 className="filter-select"
               >
                 <option value="">Todos los estados</option>
-                {statusOptions.map(status => (
+                {allStatusOptions.map(status => (
                   <option key={status.value} value={status.value}>
                     {status.icon} {status.label}
                   </option>

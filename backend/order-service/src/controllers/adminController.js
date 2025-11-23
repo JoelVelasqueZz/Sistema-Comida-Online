@@ -116,10 +116,16 @@ const getAllOrders = async (req, res) => {
 
     // Query principal
     let query = `
-      SELECT o.id, o.user_id, o.status, o.subtotal, o.delivery_fee, o.tax, o.total,
-             o.payment_method, o.created_at, o.street, o.city, o.postal_code, o.reference,
-             (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.id) as item_count
+      SELECT
+        o.id, o.user_id, o.status, o.subtotal, o.delivery_fee, o.tax, o.total,
+        o.payment_method, o.created_at, o.street, o.city, o.postal_code, o.reference,
+        o.confirmed_at, o.preparing_at, o.ready_at, o.picked_up_at, o.delivered_at,
+        o.delivery_person_id,
+        u_delivery.name as delivery_person_name,
+        u_delivery.phone as delivery_person_phone,
+        (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.id) as item_count
       FROM orders o
+      LEFT JOIN users u_delivery ON o.delivery_person_id = u_delivery.id
       WHERE 1=1
     `;
 
@@ -227,10 +233,27 @@ const updateOrderStatusAdmin = async (req, res) => {
     const { status, notes } = req.body;
     const adminId = req.user.userId;
 
-    const validStatuses = ['pending', 'confirmed', 'preparing', 'delivering', 'delivered', 'cancelled'];
+    console.log(`🔍 [Admin] Cambio de estado - Pedido: ${id}, Nuevo estado: ${status}`);
+
+    // TODOS los estados válidos (incluir 'ready')
+    const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivering', 'delivered', 'cancelled'];
 
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: 'Estado inválido' });
+      console.log(`❌ Estado inválido: ${status}`);
+      return res.status(400).json({
+        error: 'Estado inválido',
+        validStatuses,
+        received: status
+      });
+    }
+
+    // VALIDACIÓN: Admin NO puede cambiar a estados de repartidor
+    if (status === 'delivering' || status === 'delivered') {
+      console.log(`❌ Admin no puede cambiar a: ${status}`);
+      return res.status(400).json({
+        error: 'Solo los repartidores pueden marcar pedidos como "en camino" o "entregados"',
+        hint: 'Marca el pedido como "Listo para Recoger" y el repartidor se encargará del resto'
+      });
     }
 
     // Actualizar el estado
@@ -245,6 +268,8 @@ const updateOrderStatusAdmin = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Orden no encontrada' });
     }
+
+    console.log(`✅ Pedido ${id} actualizado a estado: ${status}`);
 
     // Registrar en el historial (si tienes la tabla)
     try {

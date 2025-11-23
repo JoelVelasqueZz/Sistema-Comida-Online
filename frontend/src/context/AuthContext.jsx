@@ -17,15 +17,29 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Cargar usuario del localStorage
+    console.log('🔄 AuthContext - Inicializando...');
     const currentUser = authService.getCurrentUser();
+    console.log('👤 AuthContext - Usuario desde localStorage:', currentUser);
+
     if (currentUser) {
+      console.log('✅ AuthContext - Usuario cargado:', {
+        id: currentUser.id,
+        name: currentUser.name,
+        email: currentUser.email,
+        role: currentUser.role
+      });
       setUser(currentUser);
+    } else {
+      console.log('⚠️ AuthContext - No hay usuario en localStorage');
     }
+
     setLoading(false);
   }, []);
 
   const login = async (email, password) => {
+    console.log('🔐 AuthContext - Login iniciado');
     const data = await authService.login({ email, password });
+    console.log('✅ AuthContext - Login exitoso, guardando usuario:', data.user);
     setUser(data.user);
     return data;
   };

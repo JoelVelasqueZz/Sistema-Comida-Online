@@ -389,6 +389,11 @@
   color: var(--secondary-darker);
 }
 
+.badge-ready {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
 .badge-delivering {
   background: var(--primary-lighter);
   color: var(--primary-darker);

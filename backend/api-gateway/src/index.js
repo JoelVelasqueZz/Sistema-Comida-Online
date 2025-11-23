@@ -206,6 +206,16 @@ reportsRouter.all('*', (req, res) => {
 app.use('/api/reports', reportsRouter);
 
 // ==========================================
+// RUTAS DE DELIVERY (Repartidores - Proxy a Order Service)
+// ==========================================
+const deliveryRouter = express.Router();
+deliveryRouter.all('*', (req, res) => {
+  console.log('🔵 Delivery request recibida:', req.method, req.originalUrl);
+  proxyRequest(req, res, SERVICES.orders);
+});
+app.use('/api/delivery', deliveryRouter);
+
+// ==========================================
 // RUTAS DE MENU SERVICE
 // ==========================================
 const menuRouter = express.Router();
