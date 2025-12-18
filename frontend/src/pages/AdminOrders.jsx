@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { adminService } from '../services/adminService';
 import { sendStatusUpdate } from '../services/emailService';
@@ -19,6 +19,9 @@ function AdminOrders() {
   const [newStatus, setNewStatus] = useState('');
   const [statusNotes, setStatusNotes] = useState('');
   const [updating, setUpdating] = useState(false);
+
+  // Usar ref para mantener el estado anterior sin causar re-renders
+  const previousOrdersRef = useRef({});
 
   const statusOptions = [
     { value: 'pending', label: 'Pendiente', icon: '⏳', color: 'warning' },
@@ -43,6 +46,11 @@ function AdminOrders() {
 
   useEffect(() => {
     loadOrders();
+
+    // Polling cada 30 segundos para detectar cambios automáticos de estado
+    const pollInterval = setInterval(loadOrders, 30000);
+
+    return () => clearInterval(pollInterval);
   }, [filters]);
 
   const loadOrders = async () => {
@@ -63,6 +71,10 @@ function AdminOrders() {
       // Manejar la respuesta independientemente de si tiene success o no
       const ordersData = data.orders || data || [];
       console.log('✅ Pedidos procesados:', ordersData.length);
+
+      // Detectar cambios de estado automáticos y enviar emails
+      detectStatusChanges(ordersData);
+
       setOrders(ordersData);
     } catch (err) {
       console.error('❌ Error al cargar pedidos:', err);
@@ -72,6 +84,37 @@ function AdminOrders() {
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Detecta cambios de estado automáticos (del scheduler backend)
+   * y envía emails a los clientes
+   */
+  const detectStatusChanges = (newOrders) => {
+    newOrders.forEach(newOrder => {
+      const previousOrder = previousOrdersRef.current[newOrder.id];
+
+      if (previousOrder && previousOrder.status !== newOrder.status) {
+        console.log(`📊 [AdminOrders.jsx] Pedido ${newOrder.id} cambió de ${previousOrder.status} → ${newOrder.status} (cambio automático)`);
+
+        // Enviar email de actualización (no bloqueante)
+        sendStatusUpdate({
+          orderId: newOrder.id,
+          customerName: newOrder.user_name || 'Cliente',
+          customerEmail: newOrder.user_email,
+          status: newOrder.status
+        }).then(() => {
+          console.log(`✅ [AdminOrders.jsx] Email enviado para pedido ${newOrder.id} (${newOrder.status})`);
+        }).catch(err => {
+          console.error('❌ [AdminOrders.jsx] Error al enviar email (no crítico):', err);
+        });
+      }
+
+      // Actualizar referencia con el estado actual
+      previousOrdersRef.current[newOrder.id] = {
+        status: newOrder.status
+      };
+    });
   };
 
   const getStatusInfo = (status) => {

@@ -1,13 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
+import { sendStatusUpdate } from '../services/emailService';
+import { useAuth } from '../context/AuthContext';
 import './Orders.css';
 
 function Orders() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
+
+  // Usar ref para mantener el estado anterior sin causar re-renders
+  const previousOrdersRef = useRef({});
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -24,7 +30,12 @@ function Orders() {
         console.log('📦 [Orders.jsx] Datos recibidos:', data);
         console.log('✅ [Orders.jsx] Total órdenes:', data.orders?.length || 0);
 
-        setOrders(data.orders || []);
+        const newOrders = data.orders || [];
+
+        // Detectar cambios de estado y enviar emails
+        detectStatusChanges(newOrders);
+
+        setOrders(newOrders);
       } catch (err) {
         console.error('❌ [Orders.jsx] Error al cargar órdenes:', err);
         console.error('Error details:', err.response?.data);
@@ -36,7 +47,45 @@ function Orders() {
     };
 
     loadOrders();
+
+    // Polling cada 30 segundos para detectar cambios automáticos de estado
+    const pollInterval = setInterval(loadOrders, 30000);
+
+    return () => clearInterval(pollInterval);
   }, [filter]);
+
+  /**
+   * Detecta cambios de estado entre órdenes anteriores y nuevas
+   * Envía emails solo para cambios importantes
+   */
+  const detectStatusChanges = (newOrders) => {
+    if (!user) return; // No enviar emails si no hay usuario
+
+    newOrders.forEach(newOrder => {
+      const previousOrder = previousOrdersRef.current[newOrder.id];
+
+      if (previousOrder && previousOrder.status !== newOrder.status) {
+        console.log(`📊 [Orders.jsx] Pedido ${newOrder.id} cambió de ${previousOrder.status} → ${newOrder.status}`);
+
+        // Enviar email de actualización (no bloqueante)
+        sendStatusUpdate({
+          orderId: newOrder.id,
+          customerName: user.name || 'Cliente',
+          customerEmail: user.email,
+          status: newOrder.status
+        }).then(() => {
+          console.log(`✅ [Orders.jsx] Email enviado para pedido ${newOrder.id} (${newOrder.status})`);
+        }).catch(err => {
+          console.error('❌ [Orders.jsx] Error al enviar email (no crítico):', err);
+        });
+      }
+
+      // Actualizar referencia con el estado actual
+      previousOrdersRef.current[newOrder.id] = {
+        status: newOrder.status
+      };
+    });
+  };
 
   const getStatusBadgeClass = (status) => {
     const statusMap = {
