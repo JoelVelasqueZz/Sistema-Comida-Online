@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const axios = require('axios');
 const crypto = require('crypto');
+const notificationController = require('./notificationController');
 
 // ============================================
 // CREAR ORDEN
@@ -146,6 +147,16 @@ const createOrder = async (req, res) => {
 
     await client.query('COMMIT');
     console.log('Orden completada exitosamente');
+
+    // Crear notificación de pedido creado
+    await notificationController.createNotification({
+      user_id: userId,
+      type: 'order_created',
+      title: '✅ Pedido Creado',
+      message: `Tu pedido #${order.id.substring(0, 8).toUpperCase()} ha sido creado exitosamente`,
+      related_order_id: order.id,
+      action_url: `/orders/${order.id}`
+    });
 
     // Generar token de confirmación de pago si el método es 'transfer'
     let confirmationUrl = null;
@@ -336,7 +347,7 @@ const updateOrderStatus = async (req, res) => {
     const { id } = req.params;
     const { status, notes } = req.body;
     const userRole = req.user.role;
-    const userId = req.user.userId;
+    const userId = req.user.userId || req.user.id; // ✅ CAMBIO 1: Agregar fallback
 
     const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivering', 'delivered', 'cancelled'];
 
@@ -449,6 +460,70 @@ const updateOrderStatus = async (req, res) => {
       [id]
     );
 
+    // Crear notificación según el estado
+    const orderData = orderInfoQuery.rows[0];
+
+    console.log('🔍 DEBUG - orderData completo:', orderData);
+    console.log('🔍 DEBUG - orderData.user_id:', orderData.user_id);
+    console.log('🔍 DEBUG - status:', status);
+
+    const statusMessages = {
+      confirmed: {
+        title: '✅ Pedido Confirmado',
+        message: 'Tu pedido ha sido confirmado y está siendo preparado'
+      },
+      preparing: {
+        title: '👨‍🍳 En Preparación',
+        message: 'Los chefs están preparando tu pedido'
+      },
+      ready: {
+        title: '📦 Listo para Entrega',
+        message: 'Tu pedido está listo, un repartidor lo recogerá pronto'
+      },
+      delivering: {
+        title: '🚚 En Camino',
+        message: 'Tu pedido está en camino, llegará pronto'
+      },
+      delivered: {
+        title: '🎉 Entregado',
+        message: '¡Tu pedido ha sido entregado! Esperamos que lo disfrutes'
+      },
+      cancelled: {
+        title: '❌ Pedido Cancelado',
+        message: 'Tu pedido ha sido cancelado'
+      }
+    };
+
+    const config = statusMessages[status];
+
+    console.log('🔍 DEBUG - config encontrado:', config);
+    console.log('🔍 DEBUG - Condición (config && orderData.user_id):', !!(config && orderData.user_id));
+
+    if (config && orderData.user_id) {
+      console.log(`📧 INTENTANDO crear notificación para user_id: ${orderData.user_id}`);
+      console.log(`📧 Tipo: ${status} - ${config.title}`);
+
+      try {
+        const notifResult = await notificationController.createNotification({
+          user_id: orderData.user_id,
+          type: 'status_changed',
+          title: config.title,
+          message: config.message,
+          related_order_id: id,
+          action_url: `/orders/${id}`
+        });
+
+        console.log(`✅ Notificación creada EXITOSAMENTE:`, notifResult);
+      } catch (notifError) {
+        console.error(`❌ ERROR al crear notificación:`, notifError);
+        console.error(`❌ Stack:`, notifError.stack);
+      }
+    } else {
+      console.log('⚠️ NO se creará notificación - Razones:');
+      console.log('   - config existe?', !!config);
+      console.log('   - orderData.user_id existe?', !!orderData.user_id);
+    }
+
     // Log para auditoría
     console.log(`📝 Pedido ${id} cambió a estado "${status}" por ${userRole} (${userId})`);
     if (timestampColumn) {
@@ -461,7 +536,7 @@ const updateOrderStatus = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error al actualizar estado:', error);
+    console.error('❌ Error al actualizar estado:', error);
     res.status(500).json({ error: 'Error al actualizar estado' });
   }
 };

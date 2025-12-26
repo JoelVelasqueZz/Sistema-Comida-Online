@@ -1,5 +1,6 @@
 const pool = require('../config/database');
 const axios = require('axios');
+const notificationController = require('./notificationController');
 
 // ============================================
 // OBTENER ESTADÍSTICAS DEL DASHBOARD
@@ -233,7 +234,12 @@ const updateOrderStatusAdmin = async (req, res) => {
     const { status, notes } = req.body;
     const adminId = req.user.userId;
 
-    console.log(`🔍 [Admin] Cambio de estado - Pedido: ${id}, Nuevo estado: ${status}`);
+    console.log('════════════════════════════════════════');
+    console.log('🔍 [ADMIN] INICIO - Cambio de estado');
+    console.log('🔍 [ADMIN] Pedido ID:', id);
+    console.log('🔍 [ADMIN] Nuevo estado:', status);
+    console.log('🔍 [ADMIN] Admin ID:', adminId);
+    console.log('════════════════════════════════════════');
 
     // TODOS los estados válidos (incluir 'ready')
     const validStatuses = ['pending', 'confirmed', 'preparing', 'ready', 'delivering', 'delivered', 'cancelled'];
@@ -256,20 +262,144 @@ const updateOrderStatusAdmin = async (req, res) => {
       });
     }
 
+    // Determinar qué columna de timestamp actualizar según el estado
+    let timestampColumn = null;
+
+    switch(status) {
+      case 'confirmed':
+        timestampColumn = 'confirmed_at';
+        break;
+      case 'preparing':
+        timestampColumn = 'preparing_at';
+        break;
+      case 'ready':
+        timestampColumn = 'ready_at';
+        break;
+      default:
+        timestampColumn = null;
+    }
+
+    // Construir query dinámicamente
+    let updateQuery;
+    if (timestampColumn) {
+      updateQuery = `
+        UPDATE orders
+        SET status = $1,
+            ${timestampColumn} = NOW(),
+            updated_at = NOW()
+        WHERE id = $2
+        RETURNING *
+      `;
+    } else {
+      updateQuery = `
+        UPDATE orders
+        SET status = $1, updated_at = NOW()
+        WHERE id = $2
+        RETURNING *
+      `;
+    }
+
     // Actualizar el estado
-    const result = await pool.query(
-      `UPDATE orders
-       SET status = $1, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $2
-       RETURNING *`,
-      [status, id]
-    );
+    const result = await pool.query(updateQuery, [status, id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Orden no encontrada' });
     }
 
-    console.log(`✅ Pedido ${id} actualizado a estado: ${status}`);
+    console.log(`✅ [ADMIN] Pedido ${id} actualizado a estado: ${status}`);
+    if (timestampColumn) {
+      console.log(`⏰ [ADMIN] Timestamp guardado: ${timestampColumn} = NOW()`);
+    }
+
+    // Obtener información completa del pedido con datos del cliente
+    const orderInfoQuery = await pool.query(
+      `SELECT
+        o.*,
+        u_customer.name as customer_name,
+        u_customer.email as customer_email,
+        u_customer.phone as customer_phone,
+        u_delivery.name as delivery_person_name,
+        u_delivery.phone as delivery_person_phone
+       FROM orders o
+       LEFT JOIN users u_customer ON o.user_id = u_customer.id
+       LEFT JOIN users u_delivery ON o.delivery_person_id = u_delivery.id
+       WHERE o.id = $1`,
+      [id]
+    );
+
+    const orderData = orderInfoQuery.rows[0];
+
+    console.log('════════════════════════════════════════');
+    console.log('🔍 [ADMIN] DEBUG NOTIFICACIONES - INICIO');
+    console.log('🔍 [ADMIN] orderData completo:', orderData);
+    console.log('🔍 [ADMIN] orderData.user_id:', orderData.user_id);
+    console.log('🔍 [ADMIN] status:', status);
+    console.log('════════════════════════════════════════');
+
+    // Crear notificación según el estado
+    const statusMessages = {
+      confirmed: {
+        title: '✅ Pedido Confirmado',
+        message: 'Tu pedido ha sido confirmado y está siendo preparado'
+      },
+      preparing: {
+        title: '👨‍🍳 En Preparación',
+        message: 'Los chefs están preparando tu pedido'
+      },
+      ready: {
+        title: '📦 Listo para Entrega',
+        message: 'Tu pedido está listo, un repartidor lo recogerá pronto'
+      },
+      delivering: {
+        title: '🚚 En Camino',
+        message: 'Tu pedido está en camino, llegará pronto'
+      },
+      delivered: {
+        title: '🎉 Entregado',
+        message: '¡Tu pedido ha sido entregado! Esperamos que lo disfrutes'
+      },
+      cancelled: {
+        title: '❌ Pedido Cancelado',
+        message: 'Tu pedido ha sido cancelado'
+      }
+    };
+
+    const config = statusMessages[status];
+
+    console.log('🔍 [ADMIN] config encontrado:', config);
+    console.log('🔍 [ADMIN] Condición (config && orderData.user_id):', !!(config && orderData.user_id));
+
+    if (config && orderData.user_id) {
+      console.log('📧 [ADMIN] INTENTANDO crear notificación...');
+      console.log('📧 [ADMIN] user_id:', orderData.user_id);
+      console.log('📧 [ADMIN] Tipo:', status);
+      console.log('📧 [ADMIN] Título:', config.title);
+
+      try {
+        const notifResult = await notificationController.createNotification({
+          user_id: orderData.user_id,
+          type: 'status_changed',
+          title: config.title,
+          message: config.message,
+          related_order_id: id,
+          action_url: `/orders/${id}`
+        });
+
+        console.log('✅✅✅ [ADMIN] NOTIFICACIÓN CREADA EXITOSAMENTE ✅✅✅');
+        console.log('✅ [ADMIN] Resultado:', notifResult);
+      } catch (notifError) {
+        console.error('❌ [ADMIN] ERROR al crear notificación:', notifError);
+        console.error('❌ [ADMIN] Stack:', notifError.stack);
+      }
+    } else {
+      console.log('⚠️ [ADMIN] NO se creará notificación - Razones:');
+      console.log('   - config existe?', !!config);
+      console.log('   - orderData.user_id existe?', !!orderData.user_id);
+    }
+
+    console.log('════════════════════════════════════════');
+    console.log('🔍 [ADMIN] DEBUG NOTIFICACIONES - FIN');
+    console.log('════════════════════════════════════════');
 
     // Registrar en el historial (si tienes la tabla)
     try {
@@ -279,16 +409,17 @@ const updateOrderStatusAdmin = async (req, res) => {
         [id, status, adminId, notes || 'Cambio manual por administrador']
       );
     } catch (e) {
-      console.warn('⚠️  No se pudo registrar en historial:', e.message);
+      console.warn('⚠️ [ADMIN] No se pudo registrar en historial:', e.message);
     }
 
     res.json({
       message: 'Estado actualizado exitosamente',
-      order: result.rows[0]
+      order: orderInfoQuery.rows[0]
     });
 
   } catch (error) {
-    console.error('Error al actualizar estado:', error);
+    console.error('❌ [ADMIN] Error al actualizar estado:', error);
+    console.error('❌ [ADMIN] Stack:', error.stack);
     res.status(500).json({ error: 'Error al actualizar estado' });
   }
 };

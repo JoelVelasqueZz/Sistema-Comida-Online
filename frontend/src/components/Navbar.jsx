@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useState, useEffect, useRef } from 'react';
+import NotificationBell from './Notifications/NotificationBell';
 import './Navbar.css';
 
 function Navbar() {
@@ -137,6 +138,9 @@ function Navbar() {
                     </Link>
                   </>
                 )}
+
+                {/* Notificaciones */}
+                <NotificationBell />
 
                 {/* Dropdown de Perfil */}
                 <div className="profile-dropdown-container" ref={dropdownRef}>

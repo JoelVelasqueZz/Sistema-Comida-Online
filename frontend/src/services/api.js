@@ -30,9 +30,14 @@ const processQueue = (error, token = null) => {
 // Interceptor para agregar access token en cada request
 api.interceptors.request.use(
   (config) => {
-    const accessToken = localStorage.getItem('accessToken');
+    // CRÍTICO: Buscar token en ambos lugares (compatibilidad)
+    const accessToken = localStorage.getItem('accessToken') || localStorage.getItem('token');
+    
+    console.log('🔐 [API] Token encontrado:', accessToken ? 'SÍ ✅' : 'NO ❌');
+    
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+      console.log('🔐 [API] Authorization header agregado');
     }
 
     // Debug: Log params para detectar duplicaciones
@@ -55,6 +60,8 @@ api.interceptors.response.use(
 
     // Si el error es 401 y no es la ruta de refresh-token
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log('🔐 [API] Error 401 - Token inválido o expirado');
+      
       // Si ya estamos intentando refrescar el token
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -62,7 +69,6 @@ api.interceptors.response.use(
         })
           .then(token => {
             originalRequest.headers.Authorization = `Bearer ${token}`;
-            // Usar axios directo para evitar interceptores duplicados
             return axios(originalRequest);
           })
           .catch(err => {
@@ -77,7 +83,9 @@ api.interceptors.response.use(
 
       if (!refreshToken) {
         // No hay refresh token, redirigir a login
+        console.log('🔐 [API] No hay refresh token - Redirigiendo a login');
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         window.location.href = '/login';
@@ -85,6 +93,8 @@ api.interceptors.response.use(
       }
 
       try {
+        console.log('🔐 [API] Intentando refrescar token...');
+        
         // Intentar refrescar el token
         const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
           refreshToken
@@ -92,8 +102,11 @@ api.interceptors.response.use(
 
         const { accessToken } = response.data;
 
-        // Guardar nuevo access token
+        console.log('✅ [API] Token refrescado exitosamente');
+
+        // Guardar nuevo access token EN AMBOS LUGARES
         localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('token', accessToken);
 
         // Actualizar header de la petición original
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
@@ -108,9 +121,12 @@ api.interceptors.response.use(
         return axios(originalRequest);
 
       } catch (refreshError) {
+        console.error('❌ [API] Error al refrescar token:', refreshError);
+        
         // El refresh token también expiró o es inválido
         processQueue(refreshError, null);
         localStorage.removeItem('accessToken');
+        localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user');
         window.location.href = '/login';
@@ -122,7 +138,7 @@ api.interceptors.response.use(
 
     // Error 403 - Sin permisos
     if (error.response?.status === 403) {
-      console.error('Acceso denegado:', error.response.data.error);
+      console.error('❌ [API] Acceso denegado:', error.response.data.error);
     }
 
     return Promise.reject(error);

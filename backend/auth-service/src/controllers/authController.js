@@ -99,17 +99,21 @@ const register = async (req, res) => {
     // Guardar refresh token en BD
     await saveRefreshToken(user.id, refreshToken, deviceInfo, ipAddress);
 
+    console.log('✅ Registro exitoso - Token generado para:', user.email);
+
     res.status(201).json({
+      success: true,
       message: 'Usuario registrado exitosamente',
+      token: accessToken, // Alias para compatibilidad
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
         phone: user.phone,
         role: user.role
-      },
-      accessToken,
-      refreshToken
+      }
     });
 
   } catch (error) {
@@ -172,17 +176,21 @@ const login = async (req, res) => {
     // Guardar refresh token en BD
     await saveRefreshToken(user.id, refreshToken, deviceInfo, ipAddress);
 
+    console.log('✅ Login exitoso - Token generado para:', user.email);
+
     res.json({
+      success: true,
       message: 'Login exitoso',
+      token: accessToken, // Alias para compatibilidad
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
         phone: user.phone,
         role: user.role
-      },
-      accessToken,
-      refreshToken
+      }
     });
 
   } catch (error) {

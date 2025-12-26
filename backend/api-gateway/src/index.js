@@ -28,6 +28,19 @@ app.use(express.json());
 // Logging middleware
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+
+  // Logging detallado para cambios de estado
+  if (req.method === 'PATCH' && req.url.includes('status')) {
+    console.log('════════════════════════════════════════');
+    console.log('🔵 [GATEWAY] PATCH Status recibido:');
+    console.log('   URL completa:', req.url);
+    console.log('   Path:', req.path);
+    console.log('   Method:', req.method);
+    console.log('   Body:', req.body);
+    console.log('   Headers (auth):', req.headers.authorization ? 'Presente' : 'Ausente');
+    console.log('════════════════════════════════════════');
+  }
+
   next();
 });
 
@@ -214,6 +227,16 @@ deliveryRouter.all('*', (req, res) => {
   proxyRequest(req, res, SERVICES.orders);
 });
 app.use('/api/delivery', deliveryRouter);
+
+// ==========================================
+// RUTAS DE NOTIFICATIONS (Proxy a Order Service)
+// ==========================================
+const notificationsRouter = express.Router();
+notificationsRouter.all('*', (req, res) => {
+  console.log('🔵 Notifications request recibida:', req.method, req.originalUrl);
+  proxyRequest(req, res, SERVICES.orders);
+});
+app.use('/api/notifications', notificationsRouter);
 
 // ==========================================
 // RUTAS DE MENU SERVICE
