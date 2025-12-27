@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { menuService } from '../services/menuService';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import favoriteService from '../services/favoriteService';
 import './Menu.css';
 
 function Menu() {
@@ -12,13 +14,22 @@ function Menu() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [addedProduct, setAddedProduct] = useState(null);
+  const [favorites, setFavorites] = useState({});
+  const [loadingFavorite, setLoadingFavorite] = useState(null);
 
   const { addToCart } = useCart();
+  const { user } = useAuth();
 
   useEffect(() => {
     loadCategories();
     loadProducts();
   }, []);
+
+  useEffect(() => {
+    if (user && products.length > 0) {
+      loadFavorites();
+    }
+  }, [user, products]);
 
   const loadCategories = async () => {
     try {
@@ -92,6 +103,44 @@ function Menu() {
     setTimeout(() => setAddedProduct(null), 2000);
   };
 
+  const loadFavorites = async () => {
+    try {
+      const data = await favoriteService.getFavorites();
+      const favoritesMap = {};
+      data.favorites.forEach(fav => {
+        favoritesMap[fav.id] = true;
+      });
+      setFavorites(favoritesMap);
+    } catch (error) {
+      console.error('Error cargando favoritos:', error);
+    }
+  };
+
+  const handleToggleFavorite = async (e, productId) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      alert('Debes iniciar sesión para agregar favoritos');
+      return;
+    }
+
+    setLoadingFavorite(productId);
+    try {
+      const isFavorite = favorites[productId];
+      await favoriteService.toggleFavorite(productId, isFavorite);
+      setFavorites(prev => ({
+        ...prev,
+        [productId]: !isFavorite
+      }));
+    } catch (error) {
+      console.error('Error al cambiar favorito:', error);
+      alert('Error al actualizar favorito');
+    } finally {
+      setLoadingFavorite(null);
+    }
+  };
+
   return (
     <div className="menu-page">
       <div className="container container-7xl">
@@ -163,6 +212,17 @@ function Menu() {
                 className="product-card card-product animate-food-appear"
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
+                {user && (
+                  <button
+                    className={`favorite-btn ${favorites[product.id] ? 'active' : ''}`}
+                    onClick={(e) => handleToggleFavorite(e, product.id)}
+                    disabled={loadingFavorite === product.id}
+                    title={favorites[product.id] ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                  >
+                    {favorites[product.id] ? '❤️' : '🤍'}
+                  </button>
+                )}
+
                 <Link to={`/product/${product.id}`} className="product-link">
                   <div className="product-image-container">
                     <img

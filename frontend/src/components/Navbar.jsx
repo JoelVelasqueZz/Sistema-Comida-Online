@@ -125,6 +125,14 @@ function Navbar() {
                       📦 Mis Pedidos
                     </Link>
 
+                    <Link
+                      to="/favorites"
+                      className={`navbar-link hover-underline ${isActive('/favorites')}`}
+                      onClick={closeMobileMenu}
+                    >
+                      ❤️ Favoritos
+                    </Link>
+
                     {/* Carrito con badge animado */}
                     <Link
                       to="/cart"
@@ -182,6 +190,20 @@ function Navbar() {
                         <span className="dropdown-item-icon">👤</span>
                         Ver Perfil
                       </Link>
+
+                      {user.role !== 'delivery' && (
+                        <Link
+                          to="/favorites"
+                          className="dropdown-item"
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            closeMobileMenu();
+                          }}
+                        >
+                          <span className="dropdown-item-icon">❤️</span>
+                          Mis Favoritos
+                        </Link>
+                      )}
 
                       {user.role === 'admin' && (
                         <Link

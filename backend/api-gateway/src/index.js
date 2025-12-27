@@ -239,6 +239,26 @@ notificationsRouter.all('*', (req, res) => {
 app.use('/api/notifications', notificationsRouter);
 
 // ==========================================
+// RUTAS DE ADDRESSES (Proxy a Order Service)
+// ==========================================
+const addressesRouter = express.Router();
+addressesRouter.all('*', (req, res) => {
+  console.log('🏠 [Gateway] Address request:', req.method, req.originalUrl);
+  proxyRequest(req, res, SERVICES.orders);
+});
+app.use('/api/addresses', addressesRouter);
+
+// ==========================================
+// RUTAS DE FAVORITES (Proxy a Order Service)
+// ==========================================
+const favoritesRouter = express.Router();
+favoritesRouter.all('*', (req, res) => {
+  console.log('❤️ [Gateway] Favorite request:', req.method, req.originalUrl);
+  proxyRequest(req, res, SERVICES.orders);
+});
+app.use('/api/favorites', favoritesRouter);
+
+// ==========================================
 // RUTAS DE MENU SERVICE
 // ==========================================
 const menuRouter = express.Router();

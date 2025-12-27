@@ -7,6 +7,8 @@ const adminRoutes = require('./routes/adminRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const deliveryRoutes = require('./routes/deliveryRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const addressRoutes = require('./routes/addressRoutes');
+const favoriteRoutes = require('./routes/favoriteRoutes');
 const pool = require('./config/database');
 const { startSchedulers } = require('./schedulers/orderStatusScheduler');
 
@@ -45,6 +47,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/delivery', deliveryRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/addresses', addressRoutes);
+app.use('/api/favorites', favoriteRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });

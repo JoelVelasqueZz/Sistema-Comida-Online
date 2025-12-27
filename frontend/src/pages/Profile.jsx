@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
+import AddressManager from '../components/AddressManager';
 import './Profile.css';
 
 function Profile() {
@@ -249,6 +250,11 @@ function Profile() {
               🚪 Cerrar Sesión
             </button>
           </div>
+        </div>
+
+        {/* Address Manager Section */}
+        <div className="card card-elevated animate-fade-in-up animate-delay-2">
+          <AddressManager />
         </div>
       </div>
     </div>

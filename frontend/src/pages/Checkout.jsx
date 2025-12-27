@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { orderService } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
 import { sendOrderConfirmation } from '../services/emailService';
+import addressService from '../services/addressService';
 import CreditCardForm from '../components/checkout/CreditCardForm';
 import TransferForm from '../components/checkout/TransferForm';
 import './Checkout.css';
@@ -28,6 +29,41 @@ function Checkout() {
     }
   }, [user]);
 
+  // Cargar direcciones guardadas
+  useEffect(() => {
+    const loadAddresses = async () => {
+      try {
+        setLoadingAddresses(true);
+        const response = await addressService.getAddresses();
+        setSavedAddresses(response.addresses || []);
+
+        // Si hay una dirección predeterminada, seleccionarla automáticamente
+        const defaultAddress = response.addresses?.find(addr => addr.is_default);
+        if (defaultAddress) {
+          setSelectedAddressId(defaultAddress.id);
+          setFormData(prev => ({
+            ...prev,
+            street: defaultAddress.street,
+            city: defaultAddress.city,
+            postal_code: defaultAddress.postal_code || '',
+            reference: defaultAddress.reference || ''
+          }));
+        } else if (response.addresses && response.addresses.length === 0) {
+          // Si no hay direcciones guardadas, mostrar el formulario de nueva dirección
+          setUseNewAddress(true);
+        }
+      } catch (err) {
+        console.error('Error al cargar direcciones:', err);
+        // Si hay error, permitir ingresar dirección manualmente
+        setUseNewAddress(true);
+      } finally {
+        setLoadingAddresses(false);
+      }
+    };
+
+    loadAddresses();
+  }, []);
+
   const [formData, setFormData] = useState({
     street: '',
     city: '',
@@ -44,11 +80,33 @@ function Checkout() {
   const [currentOrderId, setCurrentOrderId] = useState(null);
   const [creatingOrder, setCreatingOrder] = useState(false);
 
+  // Estados para direcciones guardadas
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [useNewAddress, setUseNewAddress] = useState(false);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  // Manejar selección de dirección guardada
+  const handleSelectAddress = (addressId) => {
+    const address = savedAddresses.find(addr => addr.id === addressId);
+    if (address) {
+      setSelectedAddressId(addressId);
+      setFormData(prev => ({
+        ...prev,
+        street: address.street,
+        city: address.city,
+        postal_code: address.postal_code || '',
+        reference: address.reference || ''
+      }));
+      setUseNewAddress(false);
+    }
   };
 
   const calculateTotals = () => {
@@ -389,60 +447,136 @@ function Checkout() {
                   Dirección de Entrega
                 </h2>
 
-                <div className="form-group">
-                  <label className="label">Calle / Dirección *</label>
-                  <input
-                    type="text"
-                    name="street"
-                    value={formData.street}
-                    onChange={handleChange}
-                    required
-                    className="input input-lg"
-                    placeholder="Ej: Av. Principal 123"
-                  />
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="label">Ciudad *</label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleChange}
-                      required
-                      className="input input-lg"
-                      placeholder="Ej: Guayaquil"
-                    />
+                {/* Direcciones guardadas */}
+                {!loadingAddresses && savedAddresses.length > 0 && !useNewAddress && (
+                  <div className="saved-addresses-section">
+                    <label className="label">Selecciona una dirección guardada:</label>
+                    <div className="saved-addresses-grid">
+                      {savedAddresses.map((address) => (
+                        <div
+                          key={address.id}
+                          onClick={() => handleSelectAddress(address.id)}
+                          className={`saved-address-option ${selectedAddressId === address.id ? 'selected' : ''}`}
+                        >
+                          {address.is_default && (
+                            <span className="default-badge-small">⭐ Predeterminada</span>
+                          )}
+                          <div className="address-details-compact">
+                            <p className="address-street-compact">{address.street}</p>
+                            <p className="address-city-compact">
+                              {address.city}
+                              {address.postal_code && `, ${address.postal_code}`}
+                            </p>
+                            {address.reference && (
+                              <p className="address-reference-compact">{address.reference}</p>
+                            )}
+                          </div>
+                          {selectedAddressId === address.id && (
+                            <div className="selected-indicator">✓</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUseNewAddress(true);
+                        setSelectedAddressId(null);
+                        setFormData(prev => ({
+                          ...prev,
+                          street: '',
+                          city: '',
+                          postal_code: '',
+                          reference: ''
+                        }));
+                      }}
+                      className="btn btn-outline-secondary btn-sm mt-3"
+                    >
+                      + Usar nueva dirección
+                    </button>
                   </div>
+                )}
 
-                  <div className="form-group">
-                    <label className="label">Código Postal</label>
-                    <input
-                      type="text"
-                      name="postal_code"
-                      value={formData.postal_code}
-                      onChange={handleChange}
-                      className="input input-lg"
-                      placeholder="Opcional"
-                    />
-                  </div>
-                </div>
+                {/* Formulario de nueva dirección */}
+                {(useNewAddress || savedAddresses.length === 0) && (
+                  <>
+                    {savedAddresses.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUseNewAddress(false);
+                          // Seleccionar la dirección predeterminada si existe
+                          const defaultAddress = savedAddresses.find(addr => addr.is_default);
+                          if (defaultAddress) {
+                            handleSelectAddress(defaultAddress.id);
+                          }
+                        }}
+                        className="btn btn-ghost btn-sm mb-3"
+                      >
+                        ← Volver a direcciones guardadas
+                      </button>
+                    )}
 
-                <div className="form-group">
-                  <label className="label">Referencia</label>
-                  <input
-                    type="text"
-                    name="reference"
-                    value={formData.reference}
-                    onChange={handleChange}
-                    className="input input-lg"
-                    placeholder="Ej: Casa azul, junto al parque"
-                  />
-                  <p className="helper-text">
-                    Ayúdanos a encontrar tu ubicación más fácil
-                  </p>
-                </div>
+                    <div className="form-group">
+                      <label className="label">Calle / Dirección *</label>
+                      <input
+                        type="text"
+                        name="street"
+                        value={formData.street}
+                        onChange={handleChange}
+                        required
+                        className="input input-lg"
+                        placeholder="Ej: Av. Principal 123"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {(useNewAddress || savedAddresses.length === 0) && (
+                  <>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label className="label">Ciudad *</label>
+                        <input
+                          type="text"
+                          name="city"
+                          value={formData.city}
+                          onChange={handleChange}
+                          required
+                          className="input input-lg"
+                          placeholder="Ej: Guayaquil"
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label className="label">Código Postal</label>
+                        <input
+                          type="text"
+                          name="postal_code"
+                          value={formData.postal_code}
+                          onChange={handleChange}
+                          className="input input-lg"
+                          placeholder="Opcional"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="label">Referencia</label>
+                      <input
+                        type="text"
+                        name="reference"
+                        value={formData.reference}
+                        onChange={handleChange}
+                        className="input input-lg"
+                        placeholder="Ej: Casa azul, junto al parque"
+                      />
+                      <p className="helper-text">
+                        Ayúdanos a encontrar tu ubicación más fácil
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Payment Section */}

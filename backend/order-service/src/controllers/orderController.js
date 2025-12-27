@@ -148,6 +148,47 @@ const createOrder = async (req, res) => {
     await client.query('COMMIT');
     console.log('Orden completada exitosamente');
 
+    // Guardar dirección automáticamente si no existe
+    try {
+      console.log('🏠 [Order] Verificando si guardar dirección...');
+
+      // Verificar si ya existe una dirección idéntica
+      const existingAddress = await pool.query(
+        `SELECT id FROM addresses
+         WHERE user_id = $1
+         AND street = $2
+         AND city = $3
+         AND COALESCE(postal_code, '') = COALESCE($4, '')
+         LIMIT 1`,
+        [userId, delivery_address.street, delivery_address.city, delivery_address.postal_code || '']
+      );
+
+      if (existingAddress.rows.length === 0) {
+        console.log('🏠 [Order] Guardando nueva dirección...');
+
+        // Verificar si el usuario tiene direcciones
+        const userAddressesCount = await pool.query(
+          'SELECT COUNT(*) as count FROM addresses WHERE user_id = $1',
+          [userId]
+        );
+
+        const isFirstAddress = parseInt(userAddressesCount.rows[0].count) === 0;
+
+        await pool.query(
+          `INSERT INTO addresses (user_id, street, city, postal_code, reference, is_default)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [userId, delivery_address.street, delivery_address.city, delivery_address.postal_code, delivery_address.reference, isFirstAddress]
+        );
+
+        console.log('✅ [Order] Dirección guardada automáticamente');
+      } else {
+        console.log('ℹ️  [Order] Dirección ya existe, no se guarda duplicado');
+      }
+    } catch (addressError) {
+      // No fallar la orden si hay error al guardar la dirección
+      console.error('⚠️  [Order] Error al guardar dirección (no crítico):', addressError);
+    }
+
     // Crear notificación de pedido creado
     await notificationController.createNotification({
       user_id: userId,

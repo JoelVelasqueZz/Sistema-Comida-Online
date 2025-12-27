@@ -60,7 +60,7 @@ function Cart() {
               >
                 <div className="cart-item-image">
                   <img
-                    src={item.image_url || 'https://via.placeholder.com/100'}
+                    src={item.image_url || item.image || 'https://via.placeholder.com/100'}
                     alt={item.name}
                   />
                 </div>
