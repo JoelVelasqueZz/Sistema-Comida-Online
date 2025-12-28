@@ -1,0 +1,376 @@
+/* Two Factor Settings Container */
+.two-factor-settings {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Settings Header */
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.settings-title h3 {
+  margin: 0 0 8px 0;
+  color: var(--color-text-dark, #1a1a1a);
+}
+
+.settings-title p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Two Factor Badge */
+.two-factor-badge {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.two-factor-badge.enabled {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.two-factor-badge.disabled {
+  background: var(--color-gray-100, #f3f4f6);
+  color: var(--color-text-muted, #6b7280);
+  border: 1px solid var(--color-border, #e5e7eb);
+}
+
+/* Information Card */
+.two-factor-info {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid var(--color-border, #e5e7eb);
+}
+
+.info-section {
+  margin-bottom: 24px;
+}
+
+.info-section:last-child {
+  margin-bottom: 0;
+}
+
+.info-section h4 {
+  margin: 0 0 12px 0;
+  color: var(--color-text-dark, #1a1a1a);
+  font-size: 16px;
+}
+
+.info-section p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--color-text-muted, #6b7280);
+}
+
+/* Benefits List */
+.benefits-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0 0;
+}
+
+.benefits-list li {
+  padding: 8px 0;
+  color: var(--color-text-muted, #6b7280);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.benefits-list li strong {
+  color: var(--color-primary, #ff6b35);
+}
+
+/* Steps List */
+.steps-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0 0;
+  counter-reset: step-counter;
+}
+
+.steps-list li {
+  padding: 12px 0 12px 40px;
+  color: var(--color-text-muted, #6b7280);
+  position: relative;
+  border-left: 2px solid var(--color-border, #e5e7eb);
+}
+
+.steps-list li:last-child {
+  border-left-color: transparent;
+}
+
+.steps-list li::before {
+  counter-increment: step-counter;
+  content: counter(step-counter);
+  position: absolute;
+  left: -14px;
+  top: 8px;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, var(--color-primary, #ff6b35) 0%, #f7931e 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+/* Action Buttons */
+.two-factor-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.two-factor-actions button {
+  min-width: 200px;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+  backdrop-filter: blur(4px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Content */
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: var(--color-text-dark, #1a1a1a);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-body p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--color-text-muted, #6b7280);
+}
+
+.modal-body strong {
+  color: var(--color-primary, #ff6b35);
+  font-weight: 600;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  background: var(--color-gray-50, #f9fafb);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--color-border, #e5e7eb);
+}
+
+/* Alerts */
+.alert {
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.alert span {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.alert p {
+  margin: 0;
+  flex: 1;
+}
+
+.alert-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+}
+
+.alert-success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #16a34a;
+}
+
+/* Animations */
+.animate-shake {
+  animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeInAlert 0.3s ease;
+}
+
+@keyframes fadeInAlert {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner-white {
+  border-color: rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .two-factor-settings {
+    padding: 16px;
+  }
+
+  .settings-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .two-factor-badge {
+    align-self: flex-start;
+  }
+
+  .two-factor-info {
+    padding: 16px;
+  }
+
+  .info-section {
+    margin-bottom: 20px;
+  }
+
+  .two-factor-actions {
+    flex-direction: column;
+  }
+
+  .two-factor-actions button {
+    width: 100%;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 16px;
+  }
+
+  .modal-header,
+  .modal-body {
+    padding: 20px;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+}
+
+/* Hover Effects */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-lift:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.hover-lift:active:not(:disabled) {
+  transform: translateY(0);
+}

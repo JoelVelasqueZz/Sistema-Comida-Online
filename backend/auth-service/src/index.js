@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
+const twoFactorRoutes = require('./routes/twoFactorRoutes');
 const pool = require('./config/database');
 
 const app = express();
@@ -49,6 +50,7 @@ app.get('/health', async (req, res) => {
 // RUTAS
 // ============================================
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/2fa', twoFactorRoutes);
 app.use('/api/users', userRoutes);
 
 // ============================================

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { adminService } from '../services/adminService';
-import { sendStatusUpdate } from '../services/emailService';
 import './AdminOrders.css';
 
 function AdminOrders() {
@@ -88,7 +87,6 @@ function AdminOrders() {
 
   /**
    * Detecta cambios de estado automáticos (del scheduler backend)
-   * y envía emails a los clientes
    */
   const detectStatusChanges = (newOrders) => {
     newOrders.forEach(newOrder => {
@@ -96,18 +94,6 @@ function AdminOrders() {
 
       if (previousOrder && previousOrder.status !== newOrder.status) {
         console.log(`📊 [AdminOrders.jsx] Pedido ${newOrder.id} cambió de ${previousOrder.status} → ${newOrder.status} (cambio automático)`);
-
-        // Enviar email de actualización (no bloqueante)
-        sendStatusUpdate({
-          orderId: newOrder.id,
-          customerName: newOrder.user_name || 'Cliente',
-          customerEmail: newOrder.user_email,
-          status: newOrder.status
-        }).then(() => {
-          console.log(`✅ [AdminOrders.jsx] Email enviado para pedido ${newOrder.id} (${newOrder.status})`);
-        }).catch(err => {
-          console.error('❌ [AdminOrders.jsx] Error al enviar email (no crítico):', err);
-        });
       }
 
       // Actualizar referencia con el estado actual
@@ -148,17 +134,6 @@ function AdminOrders() {
           ? { ...order, status: newStatus }
           : order
       ));
-
-      // Enviar email de actualización de estado (no bloqueante)
-      // Solo enviar si el estado cambió
-      if (newStatus !== selectedOrder.status) {
-        sendStatusUpdate({
-          orderId: selectedOrder.id,
-          customerName: selectedOrder.user_name || 'Cliente',
-          customerEmail: selectedOrder.user_email,
-          status: newStatus
-        }).catch(err => console.error('Error al enviar email de actualización (no crítico):', err));
-      }
 
       setShowStatusModal(false);
       setSelectedOrder(null);

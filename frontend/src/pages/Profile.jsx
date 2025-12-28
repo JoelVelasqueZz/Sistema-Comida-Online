@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import AddressManager from '../components/AddressManager';
 import CardManager from '../components/CardManager';
+import TwoFactorSettings from '../components/TwoFactorSettings';
 import './Profile.css';
 
 function Profile() {
@@ -261,6 +262,11 @@ function Profile() {
         {/* Card Manager Section */}
         <div className="card card-elevated animate-fade-in-up animate-delay-3">
           <CardManager />
+        </div>
+
+        {/* Two Factor Authentication Section */}
+        <div className="card card-elevated animate-fade-in-up animate-delay-4">
+          <TwoFactorSettings />
         </div>
       </div>
     </div>

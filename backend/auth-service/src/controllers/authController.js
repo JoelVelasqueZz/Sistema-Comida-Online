@@ -159,13 +159,51 @@ const login = async (req, res) => {
       });
     }
 
+    // Verificar si el usuario tiene 2FA habilitado
+    if (user.two_factor_enabled && user.two_factor_method === 'email') {
+      console.log('🔐 [Auth] Usuario tiene 2FA habilitado, verificando códigos recientes...');
+
+      // Verificar si hay un código verificado recientemente (últimos 2 minutos)
+      const recentVerification = await pool.query(
+        `SELECT id, code, created_at
+         FROM two_factor_codes
+         WHERE user_id = $1
+         AND is_used = true
+         AND created_at > NOW() - INTERVAL '2 minutes'
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [user.id]
+      );
+
+      if (recentVerification.rows.length > 0) {
+        console.log('✅ [Auth] Código 2FA verificado recientemente, permitiendo login directo');
+        console.log('📊 [Auth] Código verificado hace:', recentVerification.rows[0].created_at);
+        console.log('🔐 [Auth] Continuando con login normal sin solicitar 2FA de nuevo...');
+        // NO hacer return, continuar con el login normal (generar tokens)
+      } else {
+        console.log('🔐 [Auth] No hay verificación reciente, solicitando código 2FA');
+        return res.json({
+          requiresTwoFactor: true,
+          userId: user.id,
+          email: user.email,
+          twoFactorMethod: 'email',
+          message: 'Se requiere verificación de dos factores'
+        });
+      }
+    } else {
+      // Si NO tiene 2FA, continuar con login normal (generar tokens)
+      console.log('🔐 [Auth] Usuario SIN 2FA, login normal');
+    }
+
     // Actualizar último login
+    console.log('📝 [Auth] Actualizando último login del usuario...');
     await pool.query(
       'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
       [user.id]
     );
 
     // Generar access token y refresh token
+    console.log('🔑 [Auth] Generando access token y refresh token...');
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken();
 
@@ -174,9 +212,11 @@ const login = async (req, res) => {
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
 
     // Guardar refresh token en BD
+    console.log('💾 [Auth] Guardando refresh token en base de datos...');
     await saveRefreshToken(user.id, refreshToken, deviceInfo, ipAddress);
 
-    console.log('✅ Login exitoso - Token generado para:', user.email);
+    console.log('✅ [Auth] Login exitoso - Tokens generados para:', user.email);
+    console.log('📤 [Auth] Enviando respuesta con tokens al cliente...');
 
     res.json({
       success: true,

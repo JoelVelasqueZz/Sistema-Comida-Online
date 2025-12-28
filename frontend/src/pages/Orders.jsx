@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { orderService } from '../services/orderService';
-import { sendStatusUpdate } from '../services/emailService';
 import { useAuth } from '../context/AuthContext';
 import './Orders.css';
 
@@ -56,28 +55,15 @@ function Orders() {
 
   /**
    * Detecta cambios de estado entre órdenes anteriores y nuevas
-   * Envía emails solo para cambios importantes
    */
   const detectStatusChanges = (newOrders) => {
-    if (!user) return; // No enviar emails si no hay usuario
+    if (!user) return;
 
     newOrders.forEach(newOrder => {
       const previousOrder = previousOrdersRef.current[newOrder.id];
 
       if (previousOrder && previousOrder.status !== newOrder.status) {
         console.log(`📊 [Orders.jsx] Pedido ${newOrder.id} cambió de ${previousOrder.status} → ${newOrder.status}`);
-
-        // Enviar email de actualización (no bloqueante)
-        sendStatusUpdate({
-          orderId: newOrder.id,
-          customerName: user.name || 'Cliente',
-          customerEmail: user.email,
-          status: newOrder.status
-        }).then(() => {
-          console.log(`✅ [Orders.jsx] Email enviado para pedido ${newOrder.id} (${newOrder.status})`);
-        }).catch(err => {
-          console.error('❌ [Orders.jsx] Error al enviar email (no crítico):', err);
-        });
       }
 
       // Actualizar referencia con el estado actual

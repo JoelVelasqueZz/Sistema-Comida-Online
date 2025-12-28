@@ -148,6 +148,14 @@ const proxyRequest = async (req, res, serviceUrl) => {
 // ==========================================
 // RUTAS DE AUTH SERVICE
 // ==========================================
+// Rutas de 2FA (deben ir ANTES de otras rutas de auth para que coincidan primero)
+const twoFactorRouter = express.Router();
+twoFactorRouter.all('*', (req, res) => {
+  console.log('🔐 [Gateway] 2FA request:', req.method, req.originalUrl);
+  proxyRequest(req, res, SERVICES.auth);
+});
+app.use('/api/auth/2fa', twoFactorRouter);
+
 app.post('/api/auth/register', (req, res) => {
   console.log('🔵 Register request recibida');
   proxyRequest(req, res, SERVICES.auth);
