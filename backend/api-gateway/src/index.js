@@ -259,6 +259,16 @@ favoritesRouter.all('*', (req, res) => {
 app.use('/api/favorites', favoritesRouter);
 
 // ==========================================
+// RUTAS DE CARDS (Proxy a Order Service)
+// ==========================================
+const cardsRouter = express.Router();
+cardsRouter.all('*', (req, res) => {
+  console.log('💳 [Gateway] Card request:', req.method, req.originalUrl);
+  proxyRequest(req, res, SERVICES.orders);
+});
+app.use('/api/cards', cardsRouter);
+
+// ==========================================
 // RUTAS DE MENU SERVICE
 // ==========================================
 const menuRouter = express.Router();

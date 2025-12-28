@@ -9,6 +9,7 @@ const deliveryRoutes = require('./routes/deliveryRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const addressRoutes = require('./routes/addressRoutes');
 const favoriteRoutes = require('./routes/favoriteRoutes');
+const cardRoutes = require('./routes/cardRoutes');
 const pool = require('./config/database');
 const { startSchedulers } = require('./schedulers/orderStatusScheduler');
 
@@ -49,6 +50,7 @@ app.use('/api/delivery', deliveryRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/addresses', addressRoutes);
 app.use('/api/favorites', favoriteRoutes);
+app.use('/api/cards', cardRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });

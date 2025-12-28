@@ -6,6 +6,7 @@ import { orderService } from '../services/orderService';
 import { paymentService } from '../services/paymentService';
 import { sendOrderConfirmation } from '../services/emailService';
 import addressService from '../services/addressService';
+import cardService from '../services/cardService';
 import CreditCardForm from '../components/checkout/CreditCardForm';
 import TransferForm from '../components/checkout/TransferForm';
 import './Checkout.css';
@@ -64,6 +65,38 @@ function Checkout() {
     loadAddresses();
   }, []);
 
+  // Cargar tarjetas guardadas
+  useEffect(() => {
+    const loadCards = async () => {
+      try {
+        console.log('💳 Cargando tarjetas guardadas...');
+        const data = await cardService.getCards();
+        setSavedCards(data.cards || []);
+        console.log('💳 Tarjetas cargadas:', data.cards?.length || 0);
+
+        // Auto-seleccionar tarjeta predeterminada si hay tarjetas
+        const defaultCard = data.cards?.find(card => card.is_default);
+        if (defaultCard) {
+          setSelectedCardId(defaultCard.id);
+          setUseNewCard(false);
+          console.log('💳 Tarjeta predeterminada seleccionada:', defaultCard.id);
+        } else if (data.cards && data.cards.length > 0) {
+          // Si hay tarjetas pero ninguna es predeterminada, no seleccionar ninguna
+          setUseNewCard(false);
+        } else {
+          // Si no hay tarjetas guardadas, mostrar formulario de nueva tarjeta
+          setUseNewCard(true);
+        }
+      } catch (error) {
+        console.error('Error cargando tarjetas:', error);
+        // Si hay error, permitir ingresar tarjeta manualmente
+        setUseNewCard(true);
+      }
+    };
+
+    loadCards();
+  }, []);
+
   const [formData, setFormData] = useState({
     street: '',
     city: '',
@@ -86,6 +119,13 @@ function Checkout() {
   const [useNewAddress, setUseNewAddress] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(true);
 
+  // Estados para tarjetas guardadas
+  const [savedCards, setSavedCards] = useState([]);
+  const [selectedCardId, setSelectedCardId] = useState(null);
+  const [useNewCard, setUseNewCard] = useState(false);
+  const [saveCardForFuture, setSaveCardForFuture] = useState(false);
+  const [cvv, setCvv] = useState('');
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -107,6 +147,18 @@ function Checkout() {
       }));
       setUseNewAddress(false);
     }
+  };
+
+  // Helper para detectar tipo de tarjeta
+  const getCardType = (cardNumber) => {
+    const number = cardNumber.replace(/\s/g, '');
+
+    if (number.startsWith('4')) return 'visa';
+    if (number.startsWith('5')) return 'mastercard';
+    if (number.startsWith('3')) return 'amex';
+    if (number.startsWith('6')) return 'discover';
+
+    return 'visa'; // Default
   };
 
   const calculateTotals = () => {
@@ -284,6 +336,44 @@ function Checkout() {
         deliveryAddress: `${pendingOrderData.delivery_address.street}, ${pendingOrderData.delivery_address.city}${pendingOrderData.delivery_address.postal_code ? ', ' + pendingOrderData.delivery_address.postal_code : ''}`,
         createdAt: new Date()
       }).catch(err => console.error('Error al enviar email (no crítico):', err));
+
+      // PASO 3.5: Guardar tarjeta si el usuario lo solicitó y usó una nueva tarjeta
+      console.log('🔍 [Checkout] Verificando si guardar tarjeta:', {
+        saveCardForFuture,
+        useNewCard,
+        hasCardholderName: !!paymentInfo.cardholderName,
+        paymentInfo
+      });
+
+      if (saveCardForFuture && useNewCard && paymentInfo.cardholderName) {
+        try {
+          const cardDataToSave = {
+            card_type: paymentInfo.cardType || getCardType(paymentInfo.cardNumber || ''),
+            last_four_digits: paymentInfo.lastFour,
+            cardholder_name: paymentInfo.cardholderName,
+            expiry_month: parseInt(paymentInfo.expiryMonth),
+            expiry_year: parseInt(paymentInfo.expiryYear),
+            is_default: savedCards.length === 0 // Primera tarjeta como predeterminada
+          };
+
+          console.log('💾 [Checkout] Guardando tarjeta para usos futuros...');
+          console.log('💾 [Checkout] Datos a guardar:', cardDataToSave);
+
+          await cardService.saveCard(cardDataToSave);
+
+          console.log('✅ [Checkout] Tarjeta guardada exitosamente');
+        } catch (cardError) {
+          console.error('⚠️ [Checkout] Error guardando tarjeta (no crítico):', cardError);
+          console.error('⚠️ [Checkout] Detalles del error:', cardError.response?.data || cardError.message);
+          // No fallar el checkout si falla guardar la tarjeta
+        }
+      } else {
+        console.log('ℹ️ [Checkout] No se guardará la tarjeta:', {
+          saveCardForFuture: saveCardForFuture ? 'SÍ marcado' : 'NO marcado',
+          useNewCard: useNewCard ? 'Usando nueva tarjeta' : 'Usando tarjeta guardada',
+          hasCardholderName: paymentInfo.cardholderName ? 'SÍ tiene nombre' : 'NO tiene nombre'
+        });
+      }
 
       // PASO 4: SOLO AHORA limpiar el carrito (después de que todo fue exitoso)
       console.log('🧹 Limpiando carrito...');
@@ -645,10 +735,138 @@ function Checkout() {
                 {/* Mostrar formularios de pago según el método seleccionado */}
                 {showPaymentForm && formData.payment_method === 'card' && (
                   <div className="payment-form-container">
-                    <CreditCardForm
-                      amount={totals.total}
-                      onPaymentSuccess={handleCardPayment}
-                    />
+                    {/* Selector de tarjetas guardadas */}
+                    {savedCards.length > 0 && (
+                      <div className="saved-cards-section">
+                        <div className="payment-method-toggle">
+                          <button
+                            type="button"
+                            className={!useNewCard ? 'active' : ''}
+                            onClick={() => {
+                              setUseNewCard(false);
+                              const defaultCard = savedCards.find(c => c.is_default);
+                              if (defaultCard) setSelectedCardId(defaultCard.id);
+                              setCvv('');
+                            }}
+                          >
+                            📋 Usar Tarjeta Guardada
+                          </button>
+                          <button
+                            type="button"
+                            className={useNewCard ? 'active' : ''}
+                            onClick={() => {
+                              setUseNewCard(true);
+                              setSelectedCardId(null);
+                              setCvv('');
+                            }}
+                          >
+                            ➕ Nueva Tarjeta
+                          </button>
+                        </div>
+
+                        {!useNewCard && (
+                          <div className="saved-cards-list">
+                            {savedCards.map(card => (
+                              <div
+                                key={card.id}
+                                className={`saved-card-option ${selectedCardId === card.id ? 'selected' : ''}`}
+                                onClick={() => setSelectedCardId(card.id)}
+                              >
+                                <div className="card-radio">
+                                  <input
+                                    type="radio"
+                                    name="saved-card"
+                                    checked={selectedCardId === card.id}
+                                    onChange={() => setSelectedCardId(card.id)}
+                                  />
+                                </div>
+                                <div className="card-details">
+                                  <div className="card-header">
+                                    <span className="card-type">
+                                      💳 {card.card_type.toUpperCase()}
+                                    </span>
+                                    {card.is_default && (
+                                      <span className="default-badge-small">⭐ Predeterminada</span>
+                                    )}
+                                  </div>
+                                  <div className="card-number">•••• •••• •••• {card.last_four_digits}</div>
+                                  <div className="card-info-row">
+                                    <span>{card.cardholder_name}</span>
+                                    <span>Exp: {String(card.expiry_month).padStart(2, '0')}/{card.expiry_year}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+
+                            {/* CVV requerido incluso con tarjeta guardada */}
+                            <div className="cvv-required">
+                              <label>Código de Seguridad (CVV) *</label>
+                              <input
+                                type="text"
+                                value={cvv}
+                                onChange={(e) => setCvv(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                placeholder="123"
+                                maxLength="4"
+                                required
+                              />
+                              <small>Por seguridad, ingresa el CVV de tu tarjeta</small>
+                            </div>
+
+                            {/* Botón de pago con tarjeta guardada */}
+                            <button
+                              type="button"
+                              className="pay-button"
+                              disabled={!selectedCardId || !cvv}
+                              onClick={async () => {
+                                if (!selectedCardId || !cvv) {
+                                  alert('Por favor selecciona una tarjeta e ingresa el CVV');
+                                  return;
+                                }
+
+                                // Simular pago con tarjeta guardada
+                                const selectedCard = savedCards.find(c => c.id === selectedCardId);
+                                const paymentInfo = {
+                                  method: 'card',
+                                  transactionId: `TXN${Date.now()}${Math.floor(Math.random() * 1000)}`,
+                                  cardType: selectedCard.card_type,
+                                  lastFour: selectedCard.last_four_digits,
+                                  cardholderName: selectedCard.cardholder_name,
+                                  expiryMonth: String(selectedCard.expiry_month).padStart(2, '0'),
+                                  expiryYear: String(selectedCard.expiry_year)
+                                };
+
+                                await handleCardPayment(paymentInfo);
+                              }}
+                            >
+                              Pagar ${totals.total.toFixed(2)}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Formulario de nueva tarjeta */}
+                    {(useNewCard || savedCards.length === 0) && (
+                      <div className="new-card-form">
+                        <CreditCardForm
+                          amount={totals.total}
+                          onPaymentSuccess={handleCardPayment}
+                        />
+
+                        {/* Checkbox para guardar tarjeta */}
+                        <div className="save-card-checkbox">
+                          <input
+                            type="checkbox"
+                            id="saveCard"
+                            checked={saveCardForFuture}
+                            onChange={(e) => setSaveCardForFuture(e.target.checked)}
+                          />
+                          <label htmlFor="saveCard">
+                            💾 Guardar esta tarjeta para futuros pedidos
+                          </label>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

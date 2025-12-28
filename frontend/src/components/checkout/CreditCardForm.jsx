@@ -64,7 +64,6 @@ const CreditCardForm = ({ onPaymentSuccess, amount }) => {
 
   const [errors, setErrors] = useState({});
   const [processing, setProcessing] = useState(false);
-  const [saveCard, setSaveCard] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -169,31 +168,29 @@ const CreditCardForm = ({ onPaymentSuccess, amount }) => {
       console.log('⏳ Simulando procesamiento de pago...');
       const result = await simulatePayment();
 
-      // Si el usuario quiere guardar la tarjeta
-      if (saveCard) {
-        const cardToSave = {
-          cardType: getCardType(cardData.number),
-          lastFourDigits: cardData.number.slice(-4),
-          cardholderName: cardData.name,
-          expiryMonth: cardData.expiry.split('/')[0],
-          expiryYear: cardData.expiry.split('/')[1]
-        };
-
-        // Guardar en localStorage (simulado)
-        const savedCards = JSON.parse(localStorage.getItem('savedCards') || '[]');
-        savedCards.push(cardToSave);
-        localStorage.setItem('savedCards', JSON.stringify(savedCards));
-      }
-
       console.log('✅ Pago simulado exitoso:', result);
       console.log('📞 Llamando a onPaymentSuccess del padre...');
 
+      const [month, year] = cardData.expiry.split('/');
       const paymentInfo = {
         method: 'card',
         transactionId: result.transactionId,
         cardType: getCardType(cardData.number),
-        lastFour: cardData.number.slice(-4)
+        lastFour: cardData.number.slice(-4),
+        cardholderName: cardData.name,
+        expiryMonth: month,
+        expiryYear: '20' + year, // Convertir YY a YYYY
+        cardNumber: cardData.number.replace(/\s/g, '') // Para getCardType si es necesario
       };
+
+      console.log('💳 [CreditCardForm] Datos que se enviarán:', {
+        cardholderName: cardData.name,
+        expiryDate: cardData.expiry,
+        expiryMonth: month,
+        expiryYear: '20' + year,
+        lastFour: cardData.number.slice(-4),
+        cardType: getCardType(cardData.number)
+      });
 
       console.log('📦 Datos de pago a enviar:', paymentInfo);
 
@@ -295,17 +292,6 @@ const CreditCardForm = ({ onPaymentSuccess, amount }) => {
             />
             {errors.cvc && <span className="error-message">{errors.cvc}</span>}
           </div>
-        </div>
-
-        <div className="form-group checkbox">
-          <label>
-            <input
-              type="checkbox"
-              checked={saveCard}
-              onChange={(e) => setSaveCard(e.target.checked)}
-            />
-            Guardar tarjeta para futuros pagos
-          </label>
         </div>
 
         {errors.submit && (

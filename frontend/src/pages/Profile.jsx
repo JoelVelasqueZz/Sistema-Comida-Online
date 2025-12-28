@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import AddressManager from '../components/AddressManager';
+import CardManager from '../components/CardManager';
 import './Profile.css';
 
 function Profile() {
@@ -255,6 +256,11 @@ function Profile() {
         {/* Address Manager Section */}
         <div className="card card-elevated animate-fade-in-up animate-delay-2">
           <AddressManager />
+        </div>
+
+        {/* Card Manager Section */}
+        <div className="card card-elevated animate-fade-in-up animate-delay-3">
+          <CardManager />
         </div>
       </div>
     </div>
