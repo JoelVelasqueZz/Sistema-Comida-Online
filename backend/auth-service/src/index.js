@@ -5,6 +5,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const twoFactorRoutes = require('./routes/twoFactorRoutes');
+const totpRoutes = require('./routes/totpRoutes');
 const pool = require('./config/database');
 
 const app = express();
@@ -51,6 +52,7 @@ app.get('/health', async (req, res) => {
 // ============================================
 app.use('/api/auth', authRoutes);
 app.use('/api/auth/2fa', twoFactorRoutes);
+app.use('/api/auth/totp', totpRoutes);
 app.use('/api/users', userRoutes);
 
 // ============================================
@@ -71,13 +73,36 @@ app.use((err, req, res, next) => {
 });
 
 // ============================================
-// INICIAR SERVIDOR
+// INICIAR SERVIDOR (solo después de conectar a BD)
 // ============================================
-app.listen(PORT, () => {
-  console.log(`Auth Service corriendo en http://localhost:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
-  console.log(`Database: ${process.env.DATABASE_URL.split('@')[1]}`);
-});
+const startServer = async () => {
+  try {
+    // 1. PRIMERO: Verificar conexión a PostgreSQL
+    console.log('🔄 Verificando conexión a PostgreSQL...');
+    await pool.query('SELECT NOW()');
+    console.log('✅ CONECTADO A POSTGRESQL EXITOSAMENTE');
+
+    // 2. LUEGO: Iniciar servidor
+    app.listen(PORT, () => {
+      console.log('');
+      console.log('════════════════════════════════════════');
+      console.log('🚀 AUTH SERVICE INICIADO CORRECTAMENTE');
+      console.log('════════════════════════════════════════');
+      console.log(`📍 URL: http://localhost:${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`💾 Database: ${process.env.DATABASE_URL.split('@')[1]}`);
+      console.log('════════════════════════════════════════');
+      console.log('');
+    });
+  } catch (error) {
+    console.error('❌ ERROR AL INICIAR SERVIDOR:', error);
+    console.error('❌ No se pudo conectar a PostgreSQL');
+    process.exit(1);
+  }
+};
+
+// Iniciar servidor
+startServer();
 
 // Manejo de shutdown graceful
 process.on('SIGTERM', async () => {

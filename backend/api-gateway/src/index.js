@@ -156,6 +156,14 @@ twoFactorRouter.all('*', (req, res) => {
 });
 app.use('/api/auth/2fa', twoFactorRouter);
 
+// Rutas de TOTP (autenticación de dos factores con Google Authenticator)
+const totpRouter = express.Router();
+totpRouter.all('*', (req, res) => {
+  console.log('🔑 [Gateway] TOTP request:', req.method, req.originalUrl);
+  proxyRequest(req, res, SERVICES.auth);
+});
+app.use('/api/auth/totp', totpRouter);
+
 app.post('/api/auth/register', (req, res) => {
   console.log('🔵 Register request recibida');
   proxyRequest(req, res, SERVICES.auth);

@@ -160,7 +160,7 @@ const login = async (req, res) => {
     }
 
     // Verificar si el usuario tiene 2FA habilitado
-    if (user.two_factor_enabled && user.two_factor_method === 'email') {
+    if (user.two_factor_enabled && user.two_factor_method) {
       console.log('🔐 [Auth] Usuario tiene 2FA habilitado, verificando códigos recientes...');
 
       // Verificar si hay un código verificado recientemente (últimos 2 minutos)
@@ -169,7 +169,7 @@ const login = async (req, res) => {
          FROM two_factor_codes
          WHERE user_id = $1
          AND is_used = true
-         AND created_at > NOW() - INTERVAL '2 minutes'
+         AND created_at > NOW() - INTERVAL '30 seconds'
          ORDER BY created_at DESC
          LIMIT 1`,
         [user.id]
@@ -186,7 +186,7 @@ const login = async (req, res) => {
           requiresTwoFactor: true,
           userId: user.id,
           email: user.email,
-          twoFactorMethod: 'email',
+          twoFactorMethod: user.two_factor_method,
           message: 'Se requiere verificación de dos factores'
         });
       }

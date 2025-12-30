@@ -50,12 +50,15 @@ const twoFactorService = {
    */
   getStatus: async () => {
     try {
-      console.log('📊 [2FA Service] Obteniendo estado de 2FA');
+      console.log('📡 [2FA Service] Obteniendo estado de 2FA...');
       const response = await api.get('/auth/2fa/status');
-      console.log('✅ [2FA Service] Estado obtenido:', response.data);
+      console.log('📡 [2FA Service] Respuesta completa:', response.data);
+      console.log('📡 [2FA Service] Enabled:', response.data.enabled);
+      console.log('📡 [2FA Service] Method:', response.data.method);
       return response.data;
     } catch (error) {
       console.error('❌ [2FA Service] Error obteniendo estado:', error);
+      console.error('❌ [2FA Service] Error detalle:', error.response?.data);
       throw error;
     }
   },

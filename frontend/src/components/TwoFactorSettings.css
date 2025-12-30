@@ -145,20 +145,14 @@
 
 /* Modal Overlay */
 .modal-overlay {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.2s ease;
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.7);
+  /* backdrop-filter removido */
 }
-
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -170,13 +164,17 @@
 
 /* Modal Content */
 .modal-content {
+  position: relative;
   background: white;
   border-radius: 16px;
+  padding: 32px;
   max-width: 500px;
   width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease;
-  overflow: hidden;
+  animation: modalSlideIn 0.3s ease;
+  z-index: 10;
 }
 
 @keyframes slideUp {
@@ -373,4 +371,265 @@
 
 .hover-lift:active:not(:disabled) {
   transform: translateY(0);
+}
+
+/* Two Factor Options */
+.two-factor-options {
+  margin-bottom: 24px;
+}
+
+.option-card {
+  display: block;
+  border: 2px solid var(--color-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.option-card:hover:not(.disabled) {
+  border-color: var(--color-primary, #ff6b35);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.1);
+}
+
+.option-card.active {
+  border-color: var(--color-primary, #ff6b35);
+  background: linear-gradient(135deg, #fff5f0 0%, #ffe8dc 100%);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+}
+
+.option-card.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f9fafb;
+}
+
+.option-card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+}
+
+.option-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.option-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.option-info {
+  flex: 1;
+}
+
+.option-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-dark, #1a1a1a);
+}
+
+.option-info p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-text-muted, #6b7280);
+}
+
+/* Modal de setup TOTP */
+.totp-setup-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  isolation: isolate;
+}
+
+.totp-setup-modal .modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.totp-setup-modal .modal-content {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease;
+  z-index: 10000;
+  isolation: isolate;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.totp-setup-modal .modal-content h3 {
+  margin: 0 0 24px 0;
+  font-size: 24px;
+  color: #2c3e50;
+  text-align: center;
+}
+
+.setup-steps {
+  margin-bottom: 24px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.step:last-child {
+  border-bottom: none;
+}
+
+.step-number {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.step p {
+  margin: 0 0 12px 0;
+  color: #2c3e50;
+  line-height: 1.6;
+}
+
+.qr-code-container {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 3px solid #333;
+  display: inline-block;
+  margin: 12px 0;
+  position: relative;
+  z-index: 10001;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.qr-code-container img {
+  display: block;
+  width: 220px;
+  height: 220px;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  filter: contrast(1.2) brightness(1);
+  background: white;
+  opacity: 1 !important;
+}
+
+.manual-entry {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #6c757d;
+  cursor: pointer;
+}
+
+.manual-entry summary {
+  padding: 8px;
+  border-radius: 6px;
+  background: #f8f9fa;
+  user-select: none;
+}
+
+.manual-entry summary:hover {
+  background: #e9ecef;
+}
+
+.manual-entry code {
+  display: block;
+  margin-top: 8px;
+  padding: 12px;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  word-break: break-all;
+  color: #667eea;
+}
+
+.totp-code-input {
+  width: 100%;
+  padding: 16px;
+  font-size: 24px;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 8px;
+  text-align: center;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.totp-code-input:focus {
+  border-color: #FF6B35;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-actions button {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .totp-setup-modal .modal-content {
+    padding: 24px;
+  }
+
+  .qr-code-container img {
+    width: 200px;
+    height: 200px;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
+    filter: contrast(1.2) brightness(1);
+    opacity: 1 !important;
+  }
+
+  .totp-code-input {
+    font-size: 20px;
+    letter-spacing: 6px;
+  }
 }
