@@ -164,6 +164,14 @@ totpRouter.all('*', (req, res) => {
 });
 app.use('/api/auth/totp', totpRouter);
 
+// Rutas de Password Reset (recuperación de contraseña)
+const passwordResetRouter = express.Router();
+passwordResetRouter.all('*', (req, res) => {
+  console.log('🔐 [Gateway] Password Reset request:', req.method, req.originalUrl);
+  proxyRequest(req, res, SERVICES.auth);
+});
+app.use('/api/auth/password-reset', passwordResetRouter);
+
 app.post('/api/auth/register', (req, res) => {
   console.log('🔵 Register request recibida');
   proxyRequest(req, res, SERVICES.auth);

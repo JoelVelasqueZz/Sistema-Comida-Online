@@ -246,6 +246,17 @@ function Login() {
                     'Iniciar Sesión'
                   )}
                 </button>
+
+                {/* Forgot Password Link */}
+                <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                  <Link
+                    to="/forgot-password"
+                    className="text-muted hover-underline"
+                    style={{ fontSize: '14px' }}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </div>
               </form>
 
               {/* Footer */}

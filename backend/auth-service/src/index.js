@@ -6,6 +6,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const twoFactorRoutes = require('./routes/twoFactorRoutes');
 const totpRoutes = require('./routes/totpRoutes');
+const passwordResetRoutes = require('./routes/passwordResetRoutes');
 const pool = require('./config/database');
 
 const app = express();
@@ -53,6 +54,7 @@ app.get('/health', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/auth/2fa', twoFactorRoutes);
 app.use('/api/auth/totp', totpRoutes);
+app.use('/api/auth/password-reset', passwordResetRoutes);
 app.use('/api/users', userRoutes);
 
 // ============================================

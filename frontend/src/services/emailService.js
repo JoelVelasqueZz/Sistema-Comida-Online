@@ -242,6 +242,39 @@ export const isEmailConfigured = () => {
   return isConfigured;
 };
 
+/**
+ * Envía email de recuperación de contraseña
+ * @param {string} email - Email del usuario
+ * @param {string} token - Token de recuperación
+ * @param {string} name - Nombre del usuario
+ * @returns {Promise<boolean>}
+ */
+export const sendPasswordResetEmail = async (email, token, name) => {
+  try {
+    console.log('📧 [Email Service] Enviando email de recuperación...');
+
+    const templateParams = {
+      customer_name: name,
+      customer_email: email,
+      order_id: token // Token en lugar de código (reutiliza campo del template)
+    };
+
+    await emailjs.send(
+      'service_nkiq6fm',
+      'template_g43uzzj',
+      templateParams,
+      'NVpawW2V7U5qmoWQH'
+    );
+
+    console.log('✅ [Email Service] Email de recuperación enviado exitosamente');
+    return true;
+
+  } catch (error) {
+    console.error('❌ [Email Service] Error enviando email de recuperación:', error);
+    throw error;
+  }
+};
+
 // Log de inicialización
 console.log('📧 EmailJS Service inicializado:', {
   configured: isEmailConfigured(),
