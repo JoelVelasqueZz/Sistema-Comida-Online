@@ -1,0 +1,327 @@
+/*
+ * ============================================
+ * WELCOME COUPON MODAL STYLES
+ * ============================================
+ */
+
+/* Modal Overlay */
+.welcome-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: var(--space-4);
+}
+
+/* Modal Content */
+.welcome-modal-content {
+  background: var(--white);
+  border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow-2xl);
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  padding: var(--space-8);
+}
+
+/* Close Button */
+.welcome-modal-close {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: var(--gray-100);
+  border: none;
+  border-radius: var(--radius-full);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: var(--text-3xl);
+  color: var(--gray-600);
+  transition: all var(--transition-base);
+  z-index: 10;
+}
+
+.welcome-modal-close:hover {
+  background: var(--gray-200);
+  color: var(--dark);
+  transform: rotate(90deg);
+}
+
+/* Header */
+.welcome-modal-header {
+  text-align: center;
+  margin-bottom: var(--space-8);
+  padding-top: var(--space-4);
+}
+
+.welcome-icon {
+  font-size: 5rem;
+  margin-bottom: var(--space-4);
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.welcome-title {
+  color: var(--dark);
+  margin-bottom: var(--space-3);
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.welcome-subtitle {
+  font-size: var(--text-lg);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Coupon Card */
+.welcome-coupon-card {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  margin-bottom: var(--space-8);
+  box-shadow: var(--shadow-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-coupon-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.3;
+}
+
+.welcome-coupon-badge {
+  display: inline-block;
+  background: var(--white);
+  color: var(--primary);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-extrabold);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  z-index: 1;
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.welcome-coupon-name {
+  color: var(--white);
+  margin-bottom: var(--space-3);
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.welcome-coupon-description {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-6);
+  position: relative;
+  z-index: 1;
+  line-height: var(--leading-relaxed);
+}
+
+/* Code Display */
+.welcome-code-display {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-code-box {
+  background: var(--white);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  border: var(--border-3) dashed var(--primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-code {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-extrabold);
+  color: var(--primary);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+.welcome-code-display .btn {
+  width: 100%;
+  background: var(--white);
+  color: var(--primary);
+  border: var(--border-2) solid var(--white);
+  font-weight: var(--font-semibold);
+}
+
+.welcome-code-display .btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Conditions */
+.welcome-conditions {
+  background: rgba(255, 255, 255, 0.2);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-3);
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-condition-item {
+  color: var(--white);
+  font-size: var(--text-sm);
+  margin: 0;
+  font-weight: var(--font-medium);
+}
+
+/* Expiry */
+.welcome-expiry {
+  background: rgba(255, 255, 255, 0.2);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-expiry-text {
+  color: var(--white);
+  font-size: var(--text-sm);
+  margin: 0;
+  font-weight: var(--font-medium);
+}
+
+/* Actions */
+.welcome-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.welcome-modal-actions .btn {
+  width: 100%;
+}
+
+/* Footer */
+.welcome-modal-footer {
+  text-align: center;
+  padding-top: var(--space-4);
+  border-top: var(--border-1) solid var(--gray-200);
+}
+
+.welcome-footer-note {
+  margin: 0;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .welcome-modal-content {
+    padding: var(--space-6);
+    max-height: 95vh;
+  }
+
+  .welcome-icon {
+    font-size: 4rem;
+  }
+
+  .welcome-title {
+    font-size: var(--text-2xl);
+  }
+
+  .welcome-subtitle {
+    font-size: var(--text-base);
+  }
+
+  .welcome-coupon-card {
+    padding: var(--space-6);
+  }
+
+  .welcome-coupon-badge {
+    font-size: var(--text-2xl);
+    padding: var(--space-2) var(--space-5);
+  }
+
+  .welcome-code {
+    font-size: var(--text-xl);
+    letter-spacing: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-modal-overlay {
+    padding: var(--space-2);
+  }
+
+  .welcome-modal-content {
+    padding: var(--space-5);
+    border-radius: var(--radius-2xl);
+  }
+
+  .welcome-icon {
+    font-size: 3rem;
+  }
+
+  .welcome-title {
+    font-size: var(--text-xl);
+  }
+
+  .welcome-coupon-badge {
+    font-size: var(--text-xl);
+  }
+
+  .welcome-code {
+    font-size: var(--text-lg);
+  }
+
+  .welcome-modal-close {
+    width: 36px;
+    height: 36px;
+    font-size: var(--text-2xl);
+  }
+}

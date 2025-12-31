@@ -293,6 +293,16 @@ cardsRouter.all('*', (req, res) => {
 app.use('/api/cards', cardsRouter);
 
 // ==========================================
+// RUTAS DE COUPONS (Proxy a Order Service)
+// ==========================================
+const couponsRouter = express.Router();
+couponsRouter.all('*', (req, res) => {
+  console.log('🎟️ [Gateway] Coupon request:', req.method, req.originalUrl);
+  proxyRequest(req, res, SERVICES.orders);
+});
+app.use('/api/coupons', couponsRouter);
+
+// ==========================================
 // RUTAS DE MENU SERVICE
 // ==========================================
 const menuRouter = express.Router();

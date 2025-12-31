@@ -21,7 +21,7 @@ function Home() {
             {user ? (
               <div className="hero-actions animate-fade-in-up animate-delay-1">
                 <p className="welcome-text">
-                  ¡Hola, <span className="text-primary font-semibold">{user.name}</span>! 👋
+                  ¡Hola, <span className="user-name-highlight">{user.name}</span>! 👋
                 </p>
                 <Link to="/menu">
                   <button className="btn btn-primary btn-lg hover-lift">

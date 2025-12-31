@@ -11,10 +11,13 @@ const createOrder = async (req, res) => {
   
   try {
     const userId = req.user.userId;
-    const { items, payment_method, special_instructions, delivery_address } = req.body;
+    const { items, payment_method, special_instructions, delivery_address, couponId, discountAmount } = req.body;
     console.log('Creando orden para usuario:', userId);
     console.log('   Items:', items);
     console.log('   Dirección:', delivery_address);
+    if (couponId) {
+      console.log('   Cupón aplicado:', couponId, 'Descuento:', discountAmount);
+    }
 
     // Validaciones
     if (!items || items.length === 0) {
@@ -78,35 +81,41 @@ const createOrder = async (req, res) => {
 
     // Calcular totales
     const deliveryFee = 2.50;
-    const tax = subtotal * 0.12;
-    const total = subtotal + deliveryFee + tax;
+    const discount = discountAmount ? parseFloat(discountAmount) : 0;
+    const subtotalWithDiscount = subtotal - discount;
+    const tax = subtotalWithDiscount * 0.12; // Impuesto sobre subtotal con descuento
+    const total = subtotalWithDiscount + deliveryFee + tax;
 
     console.log('Totales calculados:');
     console.log('   Subtotal:', subtotal);
+    console.log('   Descuento:', discount);
+    console.log('   Subtotal con descuento:', subtotalWithDiscount);
     console.log('   Delivery:', deliveryFee);
     console.log('   Tax:', tax);
     console.log('   Total:', total);
 
-    // Crear la orden (sin address_id)
+    // Crear la orden (con campos de cupón)
     const orderResult = await client.query(
-      `INSERT INTO orders 
-       (user_id, status, subtotal, delivery_fee, tax, total, payment_method, special_instructions, 
-        street, city, postal_code, reference)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      `INSERT INTO orders
+       (user_id, status, subtotal, delivery_fee, tax, total, payment_method, special_instructions,
+        street, city, postal_code, reference, coupon_id, discount_amount)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
        RETURNING *`,
       [
-        userId, 
-        'pending', 
-        subtotal, 
-        deliveryFee, 
-        tax, 
-        total, 
+        userId,
+        'pending',
+        subtotal,
+        deliveryFee,
+        tax,
+        total,
         payment_method || 'cash',
         special_instructions || null,
         delivery_address.street,
         delivery_address.city,
         delivery_address.postal_code || '',
-        delivery_address.reference || ''
+        delivery_address.reference || '',
+        couponId || null,
+        discount || 0
       ]
     );
 
@@ -147,6 +156,29 @@ const createOrder = async (req, res) => {
 
     await client.query('COMMIT');
     console.log('Orden completada exitosamente');
+
+    // Registrar uso del cupón si existe
+    if (couponId) {
+      try {
+        console.log('🎟️ [Order] Registrando uso de cupón...');
+        await pool.query(
+          `INSERT INTO coupon_usage (coupon_id, user_id, order_id, discount_amount)
+           VALUES ($1, $2, $3, $4)`,
+          [couponId, userId, order.id, discount]
+        );
+
+        // Incrementar contador de usos del cupón
+        await pool.query(
+          'UPDATE coupons SET current_uses = current_uses + 1 WHERE id = $1',
+          [couponId]
+        );
+
+        console.log('✅ [Order] Uso de cupón registrado exitosamente');
+      } catch (couponError) {
+        // No fallar la orden si hay error al registrar el cupón
+        console.error('⚠️  [Order] Error al registrar uso de cupón (no crítico):', couponError);
+      }
+    }
 
     // Guardar dirección automáticamente si no existe
     try {

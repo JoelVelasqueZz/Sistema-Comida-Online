@@ -781,3 +781,153 @@
     max-width: 200px;
   }
 }
+
+/* ============================================
+ * ESTILOS PARA SECCIÓN DE CUPONES EN CHECKOUT
+ * ============================================ */
+
+/* Sección de cupones en checkout */
+.coupon-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.coupon-section h4 {
+  margin: 0 0 15px 0;
+  font-size: 1rem;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.coupon-input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.coupon-input {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+}
+
+.coupon-input:focus {
+  outline: none;
+  border-color: #FF6B35;
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+}
+
+.coupon-input:disabled {
+  background: #e9ecef;
+  cursor: not-allowed;
+}
+
+.apply-coupon-btn {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.apply-coupon-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.apply-coupon-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.applied-coupon {
+  background: white;
+  border: 2px solid #10b981;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.coupon-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.coupon-badge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  font-family: 'Courier New', monospace;
+}
+
+.coupon-savings {
+  color: #10b981;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.remove-coupon-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.remove-coupon-btn:hover {
+  background: #dc2626;
+}
+
+.coupon-error {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #fee2e2;
+  border-left: 4px solid #ef4444;
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Línea de descuento en el resumen */
+.discount-row {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.discount-amount {
+  color: #10b981;
+  font-weight: 700;
+}
+
+/* Responsive para cupones */
+@media (max-width: 768px) {
+  .coupon-input-group {
+    flex-direction: column;
+  }
+
+  .apply-coupon-btn {
+    width: 100%;
+  }
+}

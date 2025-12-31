@@ -63,6 +63,16 @@
   margin-bottom: var(--space-4);
 }
 
+.user-name-highlight {
+  font-weight: var(--font-bold);
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--white);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
 /* Features Section */
 .features-section {
   padding: var(--space-20) var(--space-4);

@@ -133,6 +133,14 @@ function Navbar() {
                       ❤️ Favoritos
                     </Link>
 
+                    <Link
+                      to="/promociones"
+                      className={`navbar-link hover-underline ${isActive('/promociones')}`}
+                      onClick={closeMobileMenu}
+                    >
+                      🎟️ Promociones
+                    </Link>
+
                     {/* Carrito con badge animado */}
                     <Link
                       to="/cart"
@@ -192,17 +200,31 @@ function Navbar() {
                       </Link>
 
                       {user.role !== 'delivery' && (
-                        <Link
-                          to="/favorites"
-                          className="dropdown-item"
-                          onClick={() => {
-                            setProfileDropdownOpen(false);
-                            closeMobileMenu();
-                          }}
-                        >
-                          <span className="dropdown-item-icon">❤️</span>
-                          Mis Favoritos
-                        </Link>
+                        <>
+                          <Link
+                            to="/favorites"
+                            className="dropdown-item"
+                            onClick={() => {
+                              setProfileDropdownOpen(false);
+                              closeMobileMenu();
+                            }}
+                          >
+                            <span className="dropdown-item-icon">❤️</span>
+                            Mis Favoritos
+                          </Link>
+
+                          <Link
+                            to="/promociones"
+                            className="dropdown-item"
+                            onClick={() => {
+                              setProfileDropdownOpen(false);
+                              closeMobileMenu();
+                            }}
+                          >
+                            <span className="dropdown-item-icon">🎟️</span>
+                            Promociones
+                          </Link>
+                        </>
                       )}
 
                       {user.role === 'admin' && (

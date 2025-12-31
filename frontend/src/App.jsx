@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -17,6 +18,7 @@ import Orders from './pages/Orders';
 import OrderDetail from './pages/OrderDetail';
 import Profile from './pages/Profile';
 import Favorites from './pages/Favorites';
+import Promociones from './pages/Promociones';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminOrders from './pages/AdminOrders';
 import MenuManagement from './pages/admin/MenuManagement';
@@ -26,8 +28,9 @@ import AvailableOrders from './pages/delivery/AvailableOrders';
 import MyDeliveries from './pages/delivery/MyDeliveries';
 import ConfirmPayment from './pages/ConfirmPayment';
 
-// Importar componente de protección de rutas admin
+// Importar componentes
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
+import WelcomeCouponModal from './components/WelcomeCouponModal';
 
 // Componente para rutas protegidas
 function ProtectedRoute({ children }) {
@@ -60,9 +63,34 @@ function PublicRoute({ children }) {
 }
 
 function AppRoutes() {
+  const { user } = useAuth();
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+
+  useEffect(() => {
+    // Verificar si el usuario está autenticado y si ya vio el modal
+    if (user) {
+      const hasSeenModal = localStorage.getItem(`welcome_coupon_seen_${user.userId}`);
+      if (!hasSeenModal) {
+        // Mostrar modal después de un pequeño delay para mejor UX
+        const timer = setTimeout(() => {
+          setShowWelcomeModal(true);
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [user]);
+
+  const handleCloseWelcomeModal = () => {
+    setShowWelcomeModal(false);
+  };
+
   return (
     <>
       <Navbar />
+      <WelcomeCouponModal
+        isOpen={showWelcomeModal}
+        onClose={handleCloseWelcomeModal}
+      />
       <Routes>
         {/* Rutas públicas */}
         <Route path="/" element={<Home />} />
@@ -152,6 +180,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Favorites />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/promociones"
+          element={
+            <ProtectedRoute>
+              <Promociones />
             </ProtectedRoute>
           }
         />

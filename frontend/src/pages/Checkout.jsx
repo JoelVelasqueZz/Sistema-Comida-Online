@@ -7,6 +7,7 @@ import { paymentService } from '../services/paymentService';
 import { sendOrderConfirmation } from '../services/emailService';
 import addressService from '../services/addressService';
 import cardService from '../services/cardService';
+import couponService from '../services/couponService';
 import CreditCardForm from '../components/checkout/CreditCardForm';
 import TransferForm from '../components/checkout/TransferForm';
 import './Checkout.css';
@@ -126,6 +127,13 @@ function Checkout() {
   const [saveCardForFuture, setSaveCardForFuture] = useState(false);
   const [cvv, setCvv] = useState('');
 
+  // Estados para cupones
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [discountAmount, setDiscountAmount] = useState(0);
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -164,9 +172,52 @@ function Checkout() {
   const calculateTotals = () => {
     const subtotal = getCartTotal();
     const delivery_fee = 2.50;
-    const tax = subtotal * 0.12;
-    const total = subtotal + delivery_fee + tax;
-    return { subtotal, delivery_fee, tax, total };
+    const tax = (subtotal - discountAmount) * 0.12; // Impuesto sobre subtotal con descuento
+    const total = subtotal - discountAmount + delivery_fee + tax;
+    return { subtotal, delivery_fee, tax, total, discount: discountAmount };
+  };
+
+  // Función para aplicar cupón
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Ingresa un código de cupón');
+      return;
+    }
+
+    try {
+      setValidatingCoupon(true);
+      setCouponError('');
+
+      console.log('🎟️ Validando cupón:', couponCode);
+
+      // Calcular subtotal
+      const subtotal = getCartTotal();
+
+      // Validar cupón
+      const response = await couponService.validateCoupon(couponCode, subtotal, cartItems);
+
+      if (response.valid) {
+        setAppliedCoupon(response.coupon);
+        setDiscountAmount(response.discountAmount);
+        console.log('✅ Cupón aplicado:', response);
+      }
+
+    } catch (error) {
+      console.error('❌ Error validando cupón:', error);
+      setCouponError(error.response?.data?.error || 'Cupón no válido');
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  // Función para remover cupón
+  const handleRemoveCoupon = () => {
+    setCouponCode('');
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    setCouponError('');
   };
 
   const handleSubmit = async () => {
@@ -200,7 +251,7 @@ function Checkout() {
         extras: item.extras?.map(e => e.id) || []
       }));
 
-      setPendingOrderData({
+      const pendingData = {
         items: orderItems,
         delivery_address: {
           street: formData.street,
@@ -210,7 +261,15 @@ function Checkout() {
         },
         payment_method: formData.payment_method,
         special_instructions: formData.special_instructions
-      });
+      };
+
+      // Si hay cupón aplicado, agregarlo
+      if (appliedCoupon) {
+        pendingData.couponId = appliedCoupon.id;
+        pendingData.discountAmount = discountAmount;
+      }
+
+      setPendingOrderData(pendingData);
 
       setShowPaymentForm(true);
       return;
@@ -237,6 +296,13 @@ function Checkout() {
         payment_method: formData.payment_method,
         special_instructions: formData.special_instructions
       };
+
+      // Si hay cupón aplicado, agregarlo
+      if (appliedCoupon) {
+        orderData.couponId = appliedCoupon.id;
+        orderData.discountAmount = discountAmount;
+        console.log('🎟️ Cupón incluido en la orden:', appliedCoupon.code);
+      }
 
       console.log('Enviando orden:', orderData);
 
@@ -970,12 +1036,63 @@ function Checkout() {
 
                 <div className="summary-divider"></div>
 
+                {/* Sección de Cupones */}
+                <div className="coupon-section">
+                  <h4>🎟️ ¿Tienes un cupón?</h4>
+
+                  {!appliedCoupon ? (
+                    <div className="coupon-input-group">
+                      <input
+                        type="text"
+                        placeholder="Ingresa tu código"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        disabled={validatingCoupon}
+                        className="coupon-input"
+                        onKeyPress={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                      />
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={validatingCoupon || !couponCode.trim()}
+                        className="apply-coupon-btn"
+                      >
+                        {validatingCoupon ? 'Validando...' : 'Aplicar'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="applied-coupon">
+                      <div className="coupon-info">
+                        <span className="coupon-badge">✅ {appliedCoupon.code}</span>
+                        <span className="coupon-savings">-${discountAmount.toFixed(2)}</span>
+                      </div>
+                      <button onClick={handleRemoveCoupon} className="remove-coupon-btn">
+                        ✕ Quitar
+                      </button>
+                    </div>
+                  )}
+
+                  {couponError && (
+                    <div className="coupon-error">
+                      ⚠️ {couponError}
+                    </div>
+                  )}
+                </div>
+
+                <div className="summary-divider"></div>
+
                 {/* Totals */}
                 <div className="summary-totals">
                   <div className="summary-row">
                     <span>Subtotal:</span>
                     <span className="font-semibold">${totals.subtotal.toFixed(2)}</span>
                   </div>
+
+                  {appliedCoupon && (
+                    <div className="summary-row discount-row">
+                      <span>Descuento ({appliedCoupon.code}):</span>
+                      <span className="discount-amount">-${discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
 
                   <div className="summary-row">
                     <span>Envío:</span>

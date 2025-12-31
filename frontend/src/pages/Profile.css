@@ -12,11 +12,25 @@
 
 /* Header */
 .profile-header {
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-10);
 }
 
 .profile-header h1 {
   margin-bottom: var(--space-2);
+}
+
+/* Profile Section - Nueva clase para envolver componentes */
+.profile-section {
+  background: var(--white);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-8);
+  margin-bottom: var(--space-8);
+  transition: all var(--transition-base);
+}
+
+.profile-section:hover {
+  box-shadow: var(--shadow-xl);
 }
 
 /* Profile Card */
@@ -25,6 +39,7 @@
   background: var(--white);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-2xl);
+  margin-bottom: var(--space-8);
 }
 
 /* Avatar Section */
@@ -247,6 +262,16 @@
 
   .profile-card {
     padding: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .profile-section {
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .profile-header {
+    margin-bottom: var(--space-6);
   }
 
   .avatar-gradient-border {
@@ -266,6 +291,7 @@
 
   .info-grid {
     grid-template-columns: 1fr;
+    gap: var(--space-3);
   }
 
   .edit-actions {
@@ -274,12 +300,23 @@
 
   .info-item {
     flex-direction: row;
+    padding: var(--space-4);
   }
 }
 
 @media (max-width: 480px) {
   .profile-card {
     padding: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .profile-section {
+    padding: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .profile-header {
+    margin-bottom: var(--space-4);
   }
 
   .avatar-gradient-border {
@@ -301,6 +338,14 @@
     width: 48px;
     height: 48px;
     font-size: var(--text-xl);
+  }
+
+  .info-grid {
+    gap: var(--space-2);
+  }
+
+  .info-item {
+    padding: var(--space-3);
   }
 }
 

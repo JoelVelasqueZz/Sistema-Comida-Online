@@ -255,17 +255,17 @@ function Profile() {
         </div>
 
         {/* Address Manager Section */}
-        <div className="card card-elevated animate-fade-in-up animate-delay-2">
+        <div className="profile-section animate-fade-in-up animate-delay-2">
           <AddressManager />
         </div>
 
         {/* Card Manager Section */}
-        <div className="card card-elevated animate-fade-in-up animate-delay-3">
+        <div className="profile-section animate-fade-in-up animate-delay-3">
           <CardManager />
         </div>
 
         {/* Two Factor Authentication Section */}
-        <div className="card card-elevated animate-fade-in-up animate-delay-4">
+        <div className="profile-section animate-fade-in-up animate-delay-4">
           <TwoFactorSettings />
         </div>
       </div>
