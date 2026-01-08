@@ -76,7 +76,9 @@ app.use((req, res, next) => {
     '/api/auth/login',
     '/api/auth/register',
     '/api/auth/refresh-token',
-    '/api/auth/logout'
+    '/api/auth/logout',
+    '/api/auth/google',             
+    '/api/auth/google/callback'
   ];
   const isMenuRoute = req.path.startsWith('/api/menu');
 
@@ -319,6 +321,43 @@ ordersRouter.all('*', (req, res) => {
   proxyRequest(req, res, SERVICES.orders);
 });
 app.use('/api/orders', ordersRouter);
+
+// ============================================
+// GOOGLE OAUTH ROUTES (sin autenticación)
+// ============================================
+
+// Ruta para iniciar autenticación con Google
+app.get('/api/auth/google', (req, res) => {
+  const targetUrl = `${SERVICES.auth}/api/auth/google`; 
+  console.log(`📤 Redirigiendo a Google OAuth: ${targetUrl}`);
+  res.redirect(targetUrl);
+});
+
+// Callback de Google
+app.get('/api/auth/google/callback', async (req, res) => {
+  try {
+    const queryString = req.url.split('/callback')[1] || '';
+    const targetUrl = `${SERVICES.auth}/api/auth/google/callback${queryString}`; 
+    console.log(`📤 Callback de Google: ${targetUrl}`);
+
+    // Hacer request al auth service
+    const response = await axios.get(targetUrl, {
+      maxRedirects: 0,
+      validateStatus: (status) => status === 302 || status === 301,
+    });
+
+    // Redirigir al frontend con los parámetros que devuelve el auth service
+    if (response.headers.location) {
+      res.redirect(response.headers.location);
+    } else {
+      throw new Error('No se recibió URL de redirección');
+    }
+  } catch (error) {
+    console.error('❌ Error en Google callback:', error.message);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=google_callback_error`);
+  }
+});
+
 
 // ==========================================
 // RUTAS DE PAYMENT SERVICE

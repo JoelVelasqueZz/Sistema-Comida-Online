@@ -1,6 +1,6 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
@@ -8,6 +8,7 @@ const twoFactorRoutes = require('./routes/twoFactorRoutes');
 const totpRoutes = require('./routes/totpRoutes');
 const passwordResetRoutes = require('./routes/passwordResetRoutes');
 const pool = require('./config/database');
+const passport = require('./config/passport');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -17,6 +18,7 @@ const PORT = process.env.PORT || 3001;
 // ============================================
 app.use(cors());
 app.use(express.json());
+app.use(passport.initialize());
 app.use(express.urlencoded({ extended: true }));
 
 // Logging de requests
