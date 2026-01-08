@@ -14,7 +14,7 @@ router.get('/stats', authMiddleware, isAdmin, userController.getUserStats);
 // Obtener todos los usuarios (con filtros y paginación)
 router.get('/', authMiddleware, isAdmin, userController.getAllUsers);
 
-// Obtener usuario por ID (con estadísticas)
+// Obtener usuario por ID (con estadísticas de pedidos)
 router.get('/:id', authMiddleware, isAdmin, userController.getUserById);
 
 // Obtener estadísticas de pedidos de un usuario
